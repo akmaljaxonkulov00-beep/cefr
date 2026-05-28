@@ -34,7 +34,7 @@
    - SUPABASE_ANON_KEY = (from Supabase)
    - SUPABASE_SERVICE_KEY = (from Supabase)
    - FRONTEND_URL = (set after Vercel deploy)
-   - PORT = 3000
+   - PORT = 4000
 4. Railway builds → copy your backend URL (e.g. https://mock-backend.railway.app)
 5. Run migrations: railway run npx prisma db push
 
