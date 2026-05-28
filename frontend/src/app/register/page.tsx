@@ -1,32 +1,65 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+
+interface Center {
+  id: string;
+  name: string;
+  address?: string;
+}
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [centerId, setCenterId] = useState('');
+  const [centers, setCenters] = useState<Center[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingCenters, setLoadingCenters] = useState(false);
   const router = useRouter();
   const { login } = useAuthStore();
+
+  useEffect(() => {
+    fetchCenters();
+  }, []);
+
+  const fetchCenters = async () => {
+    setLoadingCenters(true);
+    try {
+      const { data } = await api.get('/centers');
+      setCenters(data);
+    } catch (error) {
+      console.error('Failed to fetch centers:', error);
+    } finally {
+      setLoadingCenters(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/register', { email, password, name });
+      const payload: any = { email, password, name };
+      if (centerId) payload.centerId = centerId;
+      
+      const { data } = await api.post('/auth/register', payload);
       login(data.access_token, data.user);
       toast.success('Account created successfully!');
-      router.push('/dashboard');
+      
+      const role = data.user.role;
+      if (role === 'CENTER_ADMIN') router.push('/center-admin');
+      else if (role === 'TEACHER') router.push('/teacher');
+      else if (role === 'SUPER_ADMIN') router.push('/admin');
+      else router.push('/dashboard');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
     } finally {
@@ -110,6 +143,30 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">O'quv Markazi (ixtiyoriy)</label>
+            <div className="relative">
+              <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <select
+                value={centerId}
+                onChange={(e) => setCenterId(e.target.value)}
+                className="w-full bg-white/5 border border-gray-700 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-primary-500 transition appearance-none cursor-pointer"
+                disabled={loadingCenters}
+              >
+                <option value="">Tanlang (ixtiyoriy)</option>
+                {centers.map((center) => (
+                  <option key={center.id} value={center.id} className="bg-gray-800">
+                    {center.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                ▼
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">O'quv markazini tanlasangiz, uning o'quvchisi bo'lasiz</p>
           </div>
 
           <button

@@ -1,19 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '4000',
+      },
+    ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: 'http://localhost:4000/uploads/:path*',
-      },
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:4000/api/:path*',
-      },
-    ];
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 };
 

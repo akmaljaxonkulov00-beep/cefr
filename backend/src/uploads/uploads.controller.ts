@@ -48,4 +48,61 @@ export class UploadsController {
     const saved = await this.storage.saveSpeakingAudio(file.buffer, file.mimetype, file.originalname);
     return { storageKey: saved.storageKey, publicUrl: saved.publicUrl };
   }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('audio')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 50 * 1024 * 1024 },
+    }),
+  )
+  async uploadAudio(@CurrentUser('id') _userId: string, @UploadedFile() file?: Express.Multer.File) {
+    if (!file?.buffer?.length) throw new BadRequestException('Audio yuklanmadi');
+    try {
+      const saved = await this.storage.saveListeningAudio(file.buffer, file.mimetype, file.originalname);
+      return { url: saved.publicUrl, filename: saved.filename };
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('reading-file')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
+    }),
+  )
+  async uploadReadingFile(@CurrentUser('id') _userId: string, @UploadedFile() file?: Express.Multer.File) {
+    if (!file?.buffer?.length) throw new BadRequestException('Fayl yuklanmadi');
+    try {
+      const saved = await this.storage.saveReadingFile(file.buffer, file.mimetype, file.originalname);
+      return { url: saved.publicUrl, filename: saved.filename, extractedText: saved.extractedText };
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async uploadImage(@CurrentUser('id') _userId: string, @UploadedFile() file?: Express.Multer.File) {
+    if (!file?.buffer?.length) throw new BadRequestException('Rasm yuklanmadi');
+    try {
+      const saved = await this.storage.saveMockImage(file.buffer, file.mimetype, file.originalname);
+      return { url: saved.publicUrl, filename: saved.filename };
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
 }

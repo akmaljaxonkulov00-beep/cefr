@@ -8,6 +8,7 @@ interface User {
   avatar?: string;
   xp?: number;
   streak?: number;
+  centerId?: string;
 }
 
 interface AuthStore {

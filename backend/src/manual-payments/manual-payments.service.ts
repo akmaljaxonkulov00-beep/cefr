@@ -187,4 +187,34 @@ export class ManualPaymentsService {
       data: { consumedAt: new Date() },
     });
   }
+
+  async aiVerify(paymentId: string, reviewerId: string) {
+    const payment = await this.prisma.manualExamPayment.findUnique({
+      where: { id: paymentId },
+      include: { exam: true },
+    });
+    if (!payment) throw new NotFoundException('To\'lov topilmadi');
+    if (payment.status !== ManualPaymentStatus.PENDING) {
+      throw new BadRequestException('Faqat kutilayotgan so\'rovni tekshirish mumkin');
+    }
+
+    // AI simulation - in real implementation, this would use vision AI to analyze the screenshot
+    // For now, we'll use a simple heuristic based on amountNote and exam price
+    const examPrice = payment.exam.priceUzs || 50000;
+    const amountNote = payment.amountNote || '';
+    const amountMatch = amountNote.includes(String(examPrice)) || amountNote.includes(String(examPrice / 1000));
+
+    // Simulate AI decision
+    const isSuspicious = !amountMatch && amountNote.length > 0;
+
+    if (isSuspicious) {
+      // Reject if suspicious
+      await this.reject(paymentId, reviewerId, 'AI: Summa mos kelmayapti. Chekni tekshiring.');
+      return { action: 'rejected', reason: 'Summa mos kelmayapti' };
+    } else {
+      // Approve if looks valid
+      await this.approve(paymentId, reviewerId);
+      return { action: 'approved', reason: 'Chek tasdiqlangan' };
+    }
+  }
 }

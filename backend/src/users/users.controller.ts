@@ -22,6 +22,13 @@ export class UsersController {
     return this.usersService.getLeaderboard();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CENTER_ADMIN', 'SUPER_ADMIN')
+  @Get('center-students')
+  getCenterStudents(@CurrentUser('id') userId: string, @CurrentUser('centerId') centerId: string) {
+    return this.usersService.getCenterStudents(centerId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Put('profile')
   updateProfile(@CurrentUser('id') userId: string, @Body() data: { name?: string; avatar?: string }) {

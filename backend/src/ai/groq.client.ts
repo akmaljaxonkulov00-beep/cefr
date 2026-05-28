@@ -48,7 +48,7 @@ export class GroqClientService {
     return this.client;
   }
 
-  chatJson<T>(params: {
+  async chatJson<T>(params: {
     system: string;
     user: string;
     model?: string;
@@ -57,8 +57,10 @@ export class GroqClientService {
   }): Promise<{ parsed: T; usage: { input?: number; output?: number }; latencyMs: number; model: string }> {
     const model = params.model ?? process.env.GROQ_CHAT_MODEL ?? 'llama-3.3-70b-versatile';
     const started = Date.now();
-    return this.getClient()
-      .chat.completions.create({
+    this.logger.log(`Groq chat request: model=${model}, tokens=${params.maxTokens ?? 2048}`);
+    
+    try {
+      const res = await this.getClient().chat.completions.create({
         model: model.trim(),
         temperature: params.temperature ?? 0.35,
         max_tokens: params.maxTokens ?? 2048,
@@ -67,29 +69,33 @@ export class GroqClientService {
           { role: 'system', content: params.system },
           { role: 'user', content: params.user },
         ],
-      })
-      .then((res) => {
-        const latencyMs = Date.now() - started;
-        const text = res.choices[0]?.message?.content ?? '{}';
-        let parsed: T;
-        try {
-          parsed = JSON.parse(text) as T;
-        } catch (e) {
-          this.logger.error(`Groq JSON parse failed: ${(e as Error).message}`);
-          throw new ServiceUnavailableException('AI response was not valid JSON');
-        }
-        const usage = res.usage;
-        return {
-          parsed,
-          usage: { input: usage?.prompt_tokens, output: usage?.completion_tokens },
-          latencyMs,
-          model: model.trim(),
-        };
-      })
-      .catch((err) => {
-        this.logger.error(`Groq chat error: ${formatGroqError(err)}`);
-        throw new ServiceUnavailableException('AI service temporarily unavailable');
       });
+
+      const latencyMs = Date.now() - started;
+      const text = res.choices[0]?.message?.content ?? '{}';
+      let parsed: T;
+      try {
+        parsed = JSON.parse(text) as T;
+      } catch (e) {
+        this.logger.error(`Groq JSON parse failed: ${(e as Error).message}, raw response: ${text}`);
+        throw new ServiceUnavailableException('AI response was not valid JSON. Please try again.');
+      }
+      const usage = res.usage;
+      this.logger.log(`Groq chat success: latency=${latencyMs}ms, input_tokens=${usage?.prompt_tokens}, output_tokens=${usage?.completion_tokens}`);
+      return {
+        parsed,
+        usage: { input: usage?.prompt_tokens, output: usage?.completion_tokens },
+        latencyMs,
+        model: model.trim(),
+      };
+    } catch (err) {
+      const errorMsg = formatGroqError(err);
+      this.logger.error(`Groq chat error: ${errorMsg}`);
+      if (err instanceof APIError && err.status === 401) {
+        throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+      }
+      throw new ServiceUnavailableException(`AI service error: ${errorMsg}. Please check your API key and try again.`);
+    }
   }
 
   async transcribeAudio(params: {
@@ -104,42 +110,57 @@ export class GroqClientService {
   }> {
     const model = normalizeSttModel(process.env.GROQ_STT_MODEL);
     const started = Date.now();
-    const client = this.getClient();
-    const file = await toFile(params.buffer, params.filename, { type: params.mimeType });
-
+    
     try {
-      const res = await client.audio.transcriptions.create({
-        file,
-        model,
-        response_format: 'verbose_json',
-        timestamp_granularities: ['segment'],
-      });
-      const latencyMs = Date.now() - started;
-      const verbose = res as unknown as { text?: string; segments?: { start: number; end: number }[] };
-      return {
-        text: verbose.text ?? '',
-        segments: verbose.segments,
-        model,
-        latencyMs,
-      };
-    } catch (e1) {
-      this.logger.warn(`Groq STT verbose_json failed: ${formatGroqError(e1)}`);
+      const client = this.getClient();
+      this.logger.log(`Starting Groq STT with model: ${model}, file: ${params.filename}, size: ${params.buffer.length} bytes`);
+      const file = await toFile(params.buffer, params.filename, { type: params.mimeType });
+
       try {
-        const file2 = await toFile(params.buffer, params.filename, { type: params.mimeType });
         const res = await client.audio.transcriptions.create({
-          file: file2,
+          file,
           model,
-          response_format: 'json',
+          response_format: 'verbose_json',
+          timestamp_granularities: ['segment'],
         });
         const latencyMs = Date.now() - started;
-        const plain = res as unknown as { text?: string };
-        return { text: plain.text ?? '', segments: undefined, model, latencyMs };
-      } catch (e2) {
-        this.logger.error(`Groq STT (fallback json) failed: ${formatGroqError(e2)}`);
-        throw new ServiceUnavailableException(
-          'Speech-to-text service temporarily unavailable. Check GROQ_API_KEY in backend/.env, GROQ_STT_MODEL (e.g. whisper-large-v3-turbo), and backend terminal logs for HTTP status from Groq.',
-        );
+        const verbose = res as unknown as { text?: string; segments?: { start: number; end: number }[] };
+        this.logger.log(`Groq STT verbose_json success: latency=${latencyMs}ms, text_length=${verbose.text?.length || 0}`);
+        return {
+          text: verbose.text ?? '',
+          segments: verbose.segments,
+          model,
+          latencyMs,
+        };
+      } catch (e1) {
+        this.logger.warn(`Groq STT verbose_json failed, trying fallback: ${formatGroqError(e1)}`);
+        try {
+          const file2 = await toFile(params.buffer, params.filename, { type: params.mimeType });
+          const res = await client.audio.transcriptions.create({
+            file: file2,
+            model,
+            response_format: 'json',
+          });
+          const latencyMs = Date.now() - started;
+          const plain = res as unknown as { text?: string };
+          this.logger.log(`Groq STT fallback json success: latency=${latencyMs}ms, text_length=${plain.text?.length || 0}`);
+          return { text: plain.text ?? '', segments: undefined, model, latencyMs };
+        } catch (e2) {
+          const errorMsg = formatGroqError(e2);
+          this.logger.error(`Groq STT (fallback json) failed: ${errorMsg}`);
+          if (e2 instanceof APIError && e2.status === 401) {
+            throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+          }
+          throw new ServiceUnavailableException(`Speech-to-text service error: ${errorMsg}. Check GROQ_API_KEY in backend/.env and GROQ_STT_MODEL (e.g. whisper-large-v3).`);
+        }
       }
+    } catch (error) {
+      const errorMsg = formatGroqError(error);
+      this.logger.error(`Groq client initialization or transcription error: ${errorMsg}`);
+      if (error instanceof APIError && error.status === 401) {
+        throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+      }
+      throw new ServiceUnavailableException(`Speech-to-text service error: ${errorMsg}. Check GROQ_API_KEY in backend/.env and ensure the key is valid.`);
     }
   }
 }

@@ -1,27 +1,29 @@
-# Node modules
-node_modules/
+# Dependencies
+node_modules
+**/node_modules
 
-# Environment variables
+# Environment files (NEVER commit these)
 .env
 .env.local
 .env.production
+**/.env
+
+# Build outputs
+.next
+dist
+build
+
+# Uploads (local files)
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Logs
-logs/
-*.log
-npm-debug.log*
+.log
+npm-debug.log
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
-
-# Build output
-dist/
-build/
-
-# Dependency lock debug
-package-lock.json
+# Prisma
+backend/prisma/migrations/

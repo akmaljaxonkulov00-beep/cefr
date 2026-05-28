@@ -16,9 +16,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: { email: string; password: string; name: string }) {
+  async register(dto: { email: string; password: string; name: string; centerId?: string }) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
+
+    // If centerId is provided, verify it exists
+    if (dto.centerId) {
+      const center = await this.prisma.center.findUnique({ where: { id: dto.centerId } });
+      if (!center) throw new BadRequestException('Invalid center ID');
+    }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
@@ -27,6 +33,8 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
+        centerId: dto.centerId,
+        role: dto.centerId ? 'STUDENT' : 'STUDENT',
       },
     });
 

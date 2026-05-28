@@ -14,6 +14,11 @@ import { StorageModule } from './storage/storage.module';
 import { AuditModule } from './audit/audit.module';
 import { ManualPaymentsModule } from './manual-payments/manual-payments.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { SettingsModule } from './settings/settings.module';
+import { ReportsModule } from './reports/reports.module';
+import { MocksModule } from './mocks/mocks.module';
+import { MockPartsModule } from './mock-parts/mock-parts.module';
+import { MockPaymentsModule } from './mock-payments/mock-payments.module';
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { UploadsModule } from './uploads/uploads.module';
     UploadsModule,
     NotificationsModule,
     CentersModule,
+    SettingsModule,
+    ReportsModule,
+    MocksModule,
+    MockPartsModule,
+    MockPaymentsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -12,6 +12,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
@@ -20,15 +23,19 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/throttler": "^5.0.0",
     "@prisma/client": "^5.0.0",
+    "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "dotenv": "^17.4.2",
+    "groq-sdk": "^1.2.0",
     "helmet": "^7.0.0",
+    "mammoth": "^1.12.0",
     "multer": "^2.1.1",
     "openai": "^6.37.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
+    "pdf-parse": "^2.4.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },

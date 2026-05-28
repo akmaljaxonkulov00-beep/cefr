@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import { CreditCard } from 'lucide-react';
+import ActivePaymentCard from '@/components/ActivePaymentCard';
 
 function PaymentRedirectInner() {
   const router = useRouter();
@@ -39,9 +40,19 @@ export default function PaymentPage() {
           <p className="text-gray-400 mb-8 text-sm">
             Click/Payme olib tashlangan. Imtihon uchun to‘lovni imtihon kartasidan oching yoki profilda tarixni ko‘ring.
           </p>
-          <Suspense fallback={<div className="glass-dark rounded-2xl p-8 h-24 animate-pulse max-w-xl" />}>
-            <PaymentRedirectInner />
-          </Suspense>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-4">Aktiv To'lov Karta</h2>
+              <ActivePaymentCard />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-4">Yo'naltirish</h2>
+              <Suspense fallback={<div className="glass-dark rounded-2xl p-8 h-24 animate-pulse max-w-xl" />}>
+                <PaymentRedirectInner />
+              </Suspense>
+            </div>
+          </div>
           <p className="text-gray-500 text-sm mt-6 max-w-xl">
             <Link href="/exams" className="text-primary-400 hover:text-primary-300">
               Imtihonlar

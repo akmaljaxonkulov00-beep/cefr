@@ -44,4 +44,11 @@ export class ManualPaymentsController {
   reject(@Param('id') id: string, @CurrentUser('id') reviewerId: string, @Body() body: { reason: string }) {
     return this.manualPayments.reject(id, reviewerId, body.reason);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
+  @Post(':id/ai-verify')
+  async aiVerify(@Param('id') id: string, @CurrentUser('id') reviewerId: string) {
+    return this.manualPayments.aiVerify(id, reviewerId);
+  }
 }

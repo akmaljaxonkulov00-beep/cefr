@@ -28,6 +28,7 @@ export default function LoginPage() {
       
       const role = data.user.role;
       if (role === 'TEACHER') router.push('/teacher');
+      else if (role === 'CENTER_ADMIN') router.push('/center-admin');
       else if (role === 'SUPER_ADMIN') router.push('/admin');
       else router.push('/dashboard');
     } catch (error: any) {

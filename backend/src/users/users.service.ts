@@ -54,4 +54,12 @@ export class UsersService {
       select: { id: true, name: true, avatar: true, xp: true, streak: true },
     });
   }
+
+  async getCenterStudents(centerId: string) {
+    return this.prisma.user.findMany({
+      where: { centerId },
+      select: { id: true, email: true, name: true, role: true, avatar: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

@@ -15,6 +15,25 @@ type WritingAiJson = {
   coherenceAnalysis?: Record<string, unknown>;
 };
 
+type IELTSWritingJson = {
+  overallBand: number;
+  criteriaScores: {
+    taskAchievement: number;
+    coherenceCohesion: number;
+    lexicalResource: number;
+    grammaticalAccuracy: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  detailedFeedback: string;
+  grammarErrors: { error: string; correction: string; type: string }[];
+  vocabularyAnalysis: {
+    score: number;
+    advancedWords: string[];
+    repeatedWords: string[];
+  };
+};
+
 type PronunciationAnalysisUz = {
   strengthsUz: string;
   issuesUz: string;
@@ -38,6 +57,34 @@ type SpeakingAiJson = {
   fluencyAnalysis: FluencyAnalysisUz;
 };
 
+type IELTSSpeakingJson = {
+  overallBand: number;
+  criteriaScores: {
+    fluencyAndCoherence: number;
+    lexicalResource: number;
+    grammaticalRange: number;
+    pronunciation: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  detailedFeedback: string;
+  vocabularyAnalysis: {
+    variety: string;
+    advancedWords: string[];
+    repetitions: string[];
+  };
+  grammarAnalysis: {
+    accuracy: string;
+    complexity: string;
+    errors: { error: string; correction: string }[];
+  };
+  fluencyAnalysis: {
+    pace: string;
+    hesitations: number;
+    fillerWords: string[];
+  };
+};
+
 type RoadmapAiJson = {
   currentLevel: string;
   targetLevel: string;
@@ -49,6 +96,21 @@ type CefrPredictJson = {
   estimatedLevel: string;
   confidence: number;
   rationaleUz: string;
+};
+
+type DiagnosticReportJson = {
+  overall_score: string;
+  skills: {
+    reading: { score: string; feedback: string };
+    listening: { score: string; feedback: string };
+    writing: { score: string; feedback: string };
+    speaking: { score: string; feedback: string };
+  };
+  diagnostics: {
+    strengths: string;
+    weaknesses: string;
+    action_plan: string;
+  };
 };
 
 const CEFR_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
@@ -479,5 +541,274 @@ Faqat JSON: currentLevel (CEFR), targetLevel, weakSkills (string[]), studyPlan: 
       latencyMs,
     });
     return parsed;
+  }
+
+  async generateDiagnosticReport(
+    userId: string,
+    testType: 'IELTS' | 'CEFR',
+    readingScore: number,
+    listeningScore: number,
+    writingText: string,
+    speakingTranscript: string,
+  ) {
+    const systemPrompt = `You are a certified IELTS and CEFR senior examiner. Your task is to analyze the student's mock test performance metrics and generate a detailed diagnostic assessment report.
+You must output your assessment strictly as a valid JSON object matching the requested schema. Do not include any extra introductory or concluding markdown text.`;
+
+    const userPrompt = `Analyze this student mock exam session:
+- Exam Type: ${testType} (Either IELTS or CEFR)
+- Reading Score: ${readingScore}
+- Listening Score: ${listeningScore}
+- Writing Essay Input: "${writingText}"
+- Speaking Audio Transcript: "${speakingTranscript}"
+
+Return the JSON following this structure:
+{
+  "overall_score": "Overall band/level (e.g., '7.0' or 'B2')",
+  "skills": {
+    "reading": { "score": "X", "feedback": "Short analytical feedback" },
+    "listening": { "score": "X", "feedback": "Short analytical feedback" },
+    "writing": { "score": "X", "feedback": "Detailed feedback focusing on grammar and vocabulary criteria" },
+    "speaking": { "score": "X", "feedback": "Detailed feedback focusing on fluency and pronunciation based on transcript" }
+  },
+  "diagnostics": {
+    "strengths": "Summary of overall cross-skill strengths",
+    "weaknesses": "Critical weak points holding the student back",
+    "action_plan": "3 concrete, actionable learning steps tailored to their ${testType} goals"
+  }
+}`;
+
+    const { parsed, usage, latencyMs, model } = await this.groq.chatJson<DiagnosticReportJson>({
+      system: systemPrompt,
+      user: userPrompt,
+      maxTokens: 2048,
+      temperature: 0.35,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.diagnostic-report',
+      model,
+      inputTokens: usage.input,
+      outputTokens: usage.output,
+      latencyMs,
+    });
+
+    // Save to database
+    await this.prisma.mockReport.create({
+      data: {
+        userId,
+        testType,
+        readingScore,
+        listeningScore,
+        writingText,
+        speakingTranscript,
+        aiResponse: parsed as any,
+      },
+    });
+
+    return parsed;
+  }
+
+  async transcribeAudio(
+    userId: string,
+    buffer: Buffer,
+    filename: string,
+    mimeType: string,
+  ) {
+    const result = await this.groq.transcribeAudio({
+      buffer,
+      filename,
+      mimeType,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.transcribe',
+      model: result.model,
+      inputTokens: 0,
+      outputTokens: 0,
+      latencyMs: result.latencyMs,
+    });
+
+    return {
+      text: result.text,
+      model: result.model,
+      latencyMs: result.latencyMs,
+    };
+  }
+
+  // IELTS Writing Grading with llama-3.3-70b-versatile
+  async gradeIELTSWriting(userId: string, submission: {
+    taskType: 'TASK_1' | 'TASK_2';
+    prompt: string;
+    response: string;
+    wordCount: number;
+  }) {
+    const criteria = submission.taskType === 'TASK_1'
+      ? ['Task Achievement', 'Coherence & Cohesion', 'Lexical Resource', 'Grammatical Range & Accuracy']
+      : ['Task Response', 'Coherence & Cohesion', 'Lexical Resource', 'Grammatical Range & Accuracy'];
+
+    const system = `You are an IELTS examiner. Grade the following ${submission.taskType} response.
+Evaluate based on IELTS criteria:
+${criteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+
+Return a JSON response with:
+{
+  "overallBand": number (0-9),
+  "criteriaScores": {
+    "${criteria[0]}": number (0-9),
+    "${criteria[1]}": number (0-9),
+    "${criteria[2]}": number (0-9),
+    "${criteria[3]}": number (0-9)
+  },
+  "strengths": string[],
+  "weaknesses": string[],
+  "detailedFeedback": string,
+  "grammarErrors": [{ "error": string, "correction": string, "type": string }],
+  "vocabularyAnalysis": {
+    "score": number,
+    "advancedWords": string[],
+    "repeatedWords": string[]
+  }
+}`;
+
+    const user = `Task: ${submission.prompt}
+Student Response: ${submission.response}
+Word Count: ${submission.wordCount}`;
+
+    const { parsed, usage, latencyMs, model } = await this.groq.chatJson<IELTSWritingJson>({
+      system,
+      user,
+      model: 'llama-3.3-70b-versatile',
+      maxTokens: 2500,
+      temperature: 0.3,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.ielts-writing',
+      model,
+      inputTokens: usage.input,
+      outputTokens: usage.output,
+      latencyMs,
+    });
+
+    return parsed;
+  }
+
+  // IELTS Speaking Grading with whisper-large-v3 + llama-3.3-70b-versatile
+  async gradeIELTSSpeaking(userId: string, audioBuffer: Buffer, filename: string, mimeType: string, question: string) {
+    // Step 1: Transcribe audio with whisper-large-v3
+    const stt = await this.groq.transcribeAudio({
+      buffer: audioBuffer,
+      filename,
+      mimeType,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.ielts-speaking.stt',
+      model: stt.model,
+      latencyMs: stt.latencyMs,
+    });
+
+    const pauseMetrics = pauseMetricsFromSegments(stt.segments, stt.text || '');
+
+    // Step 2: Analyze speaking with llama-3.3-70b-versatile
+    const system = `You are an IELTS examiner. Evaluate the following speaking response.
+Evaluate based on IELTS Speaking criteria:
+1. Fluency and Coherence
+2. Lexical Resource
+3. Grammatical Range and Accuracy
+4. Pronunciation
+
+Return a JSON response with:
+{
+  "overallBand": number (0-9),
+  "criteriaScores": {
+    "fluencyAndCoherence": number (0-9),
+    "lexicalResource": number (0-9),
+    "grammaticalRange": number (0-9),
+    "pronunciation": number (0-9)
+  },
+  "strengths": string[],
+  "weaknesses": string[],
+  "detailedFeedback": string,
+  "vocabularyAnalysis": {
+    "variety": string,
+    "advancedWords": string[],
+    "repetitions": string[]
+  },
+  "grammarAnalysis": {
+    "accuracy": string,
+    "complexity": string,
+    "errors": [{ "error": string, "correction": string }]
+  },
+  "fluencyAnalysis": {
+    "pace": string,
+    "hesitations": number,
+    "fillerWords": string[]
+  }
+}`;
+
+    const user = `Question: ${question}
+Student Response Transcript: ${stt.text || ''}
+Pause Metrics: ${JSON.stringify(pauseMetrics, null, 2)}`;
+
+    const { parsed, usage, latencyMs, model } = await this.groq.chatJson<IELTSSpeakingJson>({
+      system,
+      user,
+      model: 'llama-3.3-70b-versatile',
+      maxTokens: 2500,
+      temperature: 0.3,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.ielts-speaking.analysis',
+      model,
+      inputTokens: usage.input,
+      outputTokens: usage.output,
+      latencyMs,
+    });
+
+    // Save to database
+    const { storageKey: audioStorageKey } = await this.storage.saveSpeakingAudio(audioBuffer, mimeType, filename);
+
+    const record = await this.prisma.speakingRecord.create({
+      data: {
+        userId,
+        audioStorageKey,
+        transcript: stt.text || '',
+        sttProvider: 'groq-whisper-large-v3',
+        pauseMetrics: pauseMetrics as object,
+        segmentMetadata: {
+          segments: stt.segments ?? [],
+          sttModel: stt.model,
+          sttLatencyMs: stt.latencyMs,
+        } as object,
+        fluencyScore: parsed.criteriaScores.fluencyAndCoherence,
+        grammarScore: parsed.criteriaScores.grammaticalRange,
+        pronunciationScore: parsed.criteriaScores.pronunciation,
+        overallScore: parsed.overallBand,
+        pronunciationAnalysis: {
+          strengthsUz: parsed.strengths.join(', '),
+          issuesUz: parsed.weaknesses.join(', '),
+          stressAndLinkingUz: parsed.vocabularyAnalysis.variety,
+        } as object,
+        fluencyAnalysis: {
+          paceAndRhythmUz: parsed.fluencyAnalysis.pace,
+          hesitationUz: `${parsed.fluencyAnalysis.hesitations} hesitations`,
+          coherenceSpokenUz: parsed.detailedFeedback,
+        } as object,
+        feedback: parsed.detailedFeedback,
+      },
+    });
+
+    return {
+      transcript: stt.text,
+      analysis: parsed,
+      record,
+    };
   }
 }

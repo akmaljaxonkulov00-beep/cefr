@@ -1,22 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Upload, CheckCircle } from 'lucide-react';
+import { Upload, CheckCircle, CreditCard } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ExamPaymentPage() {
   const params = useParams();
   const examId = typeof params.examId === 'string' ? params.examId : params.examId?.[0] ?? '';
   const router = useRouter();
+  const { user } = useAuthStore();
   const [file, setFile] = useState<File | null>(null);
   const [amountNote, setAmountNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [paymentInstructions, setPaymentInstructions] = useState<string>('');
+  const [centerName, setCenterName] = useState<string>('');
+
+  useEffect(() => {
+    fetchPaymentInstructions();
+  }, []);
+
+  const fetchPaymentInstructions = async () => {
+    try {
+      if (user?.centerId) {
+        const { data: center } = await api.get(`/centers/${user.centerId}`);
+        setPaymentInstructions(center.paymentInstructions || '');
+        setCenterName(center.name);
+      } else {
+        const { data: settings } = await api.get('/admin/settings');
+        setPaymentInstructions(settings.paymentInstructions || '');
+      }
+    } catch (error) {
+      console.error('Failed to fetch payment instructions');
+    }
+  };
 
   const submit = async () => {
     if (!file) {
@@ -48,6 +71,18 @@ export default function ExamPaymentPage() {
           <p className="text-gray-400 text-sm mb-6">
             Bank yoki boshqa usulda to‘lov qiling, chekni yuklang. Admin tasdiqlagach, imtihon ochiladi.
           </p>
+
+          {paymentInstructions && (
+            <div className="glass-dark rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CreditCard size={20} className="text-primary-400" />
+                <h3 className="text-lg font-semibold text-white">
+                  {centerName ? `${centerName} To'lov Ma'lumotlari` : 'To\'lov Ma\'lumotlari'}
+                </h3>
+              </div>
+              <p className="text-gray-300 text-sm whitespace-pre-wrap">{paymentInstructions}</p>
+            </div>
+          )}
 
           {done ? (
             <div className="glass-dark rounded-2xl p-8 text-center">
