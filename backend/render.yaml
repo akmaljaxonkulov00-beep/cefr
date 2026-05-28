@@ -1,9 +1,10 @@
 services:
   - type: web
     name: mock-cefr-backend
-    env: node
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    env: docker
+    plan: free
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         sync: false
