@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "AI Mock Exam Platform Backend",
   "main": "dist/src/main.js",
+  "engines": {
+    "node": ">=20.16.0"
+  },
   "scripts": {
     "build": "nest build",
     "start": "node dist/src/main.js",
