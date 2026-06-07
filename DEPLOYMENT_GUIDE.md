@@ -20,32 +20,28 @@
 5. Wait for project to be created (~2 minutes)
 
 ### 1.2 Get Database URL
-1. Go to Project Settings → Database
-2. Copy the "Connection string" (URI format)
-3. Replace `[password]` with your database password
-4. Save this as `DATABASE_URL`
+Database URL already configured:
+```
+DATABASE_URL=postgresql://postgres.diasmyffedauhqepoxbz:Akmal.1221%3F@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+```
 
 ### 1.3 Get API Keys
-1. Go to Project Settings → API
-2. Copy:
-   - `Project URL` → `SUPABASE_URL`
-   - `anon public` → `SUPABASE_ANON_KEY`
-   - `service_role` → `SUPABASE_SERVICE_KEY`
+API Keys already configured:
+```
+SUPABASE_URL=https://diasmyffedauhqepoxbz.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MzczNjcsImV4cCI6MjA5NjQxMzM2N30.5x0dQBOjvUGkPOouDfdmlBTlXkeJRbNoQdjKOQ3o_vw
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDgzNzM2NywiZXhwIjoyMDk2NDEzMzY3fQ.InhZA1tN4MCNhBeHuf8zfFfjqT1r4eQ2oTgTV-0DTbA
+```
 
 ### 1.4 Create Storage Buckets
-1. Go to Storage → Create a new bucket
-2. Create bucket: `pdf-uploads` (Public: No)
-3. Create bucket: `audio-uploads` (Public: No)
-4. Create bucket: `image-uploads` (Public: Yes)
+1. Go to https://diasmyffedauhqepoxbz.supabase.co
+2. Navigate to Storage
+3. Create bucket: `pdf-uploads` (Public: No)
+4. Create bucket: `audio-uploads` (Public: No)
+5. Create bucket: `image-uploads` (Public: Yes)
 
 ### 1.5 Run Database Migrations
-1. Go to SQL Editor in Supabase
-2. Copy and run the schema from `backend/prisma/schema.prisma`
-3. Or use Prisma migrations:
-   ```bash
-   cd backend
-   npx prisma migrate deploy
-   ```
+Database already synced with Prisma schema. No action needed.
 
 ## Step 2: Backend Deployment (Railway)
 
@@ -61,14 +57,14 @@
 In Railway project settings, add these variables:
 
 ```env
-DATABASE_URL=postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres
-JWT_SECRET=your-super-secret-jwt-key-change-this
-GROQ_API_KEY=your-groq-api-key
-SUPABASE_URL=https://[ref].supabase.co
-SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_KEY=your-supabase-service-key
+DATABASE_URL=postgresql://postgres.diasmyffedauhqepoxbz:Akmal.1221%3F@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+JWT_SECRET=zX3hMQttt2coeGP0minXpd9QJsYp80hsWFtDZPZSbTw4qocTQa7IemD3elXy5hXZldCUgYVoxs2AE8s4gn9cMw==
+GROQ_API_KEY=gsk_test_placeholder
+SUPABASE_URL=https://diasmyffedauhqepoxbz.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MzczNjcsImV4cCI6MjA5NjQxMzM2N30.5x0dQBOjvUGkPOouDfdmlBTlXkeJRbNoQdjKOQ3o_vw
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDgzNzM2NywiZXhwIjoyMDk2NDEzMzY3fQ.InhZA1tN4MCNhBeHuf8zfFfjqT1r4eQ2oTgTV-0DTbA
 FRONTEND_URL=https://your-frontend.vercel.app
-PORT=3000
+PORT=4000
 ```
 
 ### 2.3 Deploy
@@ -95,6 +91,8 @@ In Vercel project settings → Environment Variables, add:
 ```env
 NEXT_PUBLIC_API_URL=https://your-backend.railway.app
 ```
+
+**Note**: After deploying backend, replace `your-backend.railway.app` with actual Railway URL.
 
 ### 3.3 Deploy
 1. Click "Deploy"
