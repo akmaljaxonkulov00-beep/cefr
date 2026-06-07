@@ -24,7 +24,7 @@ export default function ActivePaymentCard() {
 
   const fetchActiveCard = async () => {
     try {
-      const { data } = await api.get('/settings/payment-cards/active');
+      const { data } = await api.get('/api/settings/payment-cards/active');
       setCard(data);
     } catch (error) {
       console.error('Failed to fetch active card');

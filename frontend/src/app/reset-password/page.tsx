@@ -20,7 +20,7 @@ function ResetForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/reset-password', { token, password });
+      const { data } = await api.post('/api/auth/reset-password', { token, password });
       toast.success(data.message || 'Password updated');
       window.location.href = '/login';
     } catch (err: any) {

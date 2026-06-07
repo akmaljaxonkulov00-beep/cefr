@@ -11,7 +11,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/exams/results/mine')
+    api.get('/api/exams/results/mine')
       .then(({ data }) => setResults(data))
       .catch(() => {})
       .finally(() => setLoading(false));

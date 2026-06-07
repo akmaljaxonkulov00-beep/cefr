@@ -12,7 +12,7 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/exams')
+    api.get('/api/exams')
       .then(({ data }) => setExams(data))
       .catch(() => {})
       .finally(() => setLoading(false));

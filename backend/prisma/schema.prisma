@@ -116,6 +116,7 @@ model User {
   streak                Int      @default(0)
   centerId              String?
   teacherId             String?
+  phone                 String?
 
   center                  Center?              @relation(fields: [centerId], references: [id])
   notifications           Notification[]
@@ -144,6 +145,8 @@ model Center {
   adminEmail           String?  @unique
   adminPassword        String?
   paymentInstructions  String?
+  isVip                Boolean  @default(false)
+  studentLimit         Int?
   createdAt            DateTime @default(now()) @map("created_at")
 
   users  User[]
@@ -626,4 +629,199 @@ model MockPayment {
   @@index([studentId, mockPartId])
   @@index([status])
   @@map("mock_payments")
+}
+
+model IeltsMock {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // 'Academic' | 'General'
+  level       String   // 'B1' | 'B2' | 'C1' | 'C2'
+  description String?
+  duration    Int      // total duration in minutes (175 = 2h 55m)
+  price       Float    @default(0)
+  isPaid      Boolean  @default(false)
+  status      String   @default("draft") // 'draft' | 'published'
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  listening   IeltsListening?
+  reading     IeltsReading?
+  writing     IeltsWriting?
+  speaking    IeltsSpeaking?
+  attempts    IeltsAttempt[]
+
+  @@index([type, level, status])
+  @@map("ielts_mocks")
+}
+
+model IeltsListening {
+  id        String     @id @default(cuid())
+  mockId    String     @unique
+  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int        @default(30)
+  sections  Json       // array of sections with audioUrl + questions
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@map("ielts_listening")
+}
+
+model IeltsReading {
+  id        String     @id @default(cuid())
+  mockId    String     @unique
+  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int        @default(60) // minutes
+  passages  Json       // [{title, text, questions: [...]}]
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@map("ielts_reading")
+}
+
+model IeltsWriting {
+  id        String     @id @default(cuid())
+  mockId    String     @unique
+  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int        @default(60) // minutes
+  task1     Json       // {prompt, imageUrl?, minWords: 150}
+  task2     Json       // {prompt, minWords: 250}
+  aiWeights Json       @default("{\"taskAchievement\":25,\"coherence\":25,\"lexical\":25,\"grammar\":25}")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@map("ielts_writing")
+}
+
+model IeltsSpeaking {
+  id        String     @id @default(cuid())
+  mockId    String     @unique
+  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int        @default(15) // minutes
+  part1     Json       // {questions: [...]}
+  part2     Json       // {topic, prepTime: 60, speakTime: 120}
+  part3     Json       // {questions: [...]}
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@map("ielts_speaking")
+}
+
+model IeltsAttempt {
+  id               String     @id @default(cuid())
+  mockId           String
+  mock             IeltsMock  @relation(fields: [mockId], references: [id])
+  userId           String
+  status           String     @default("in_progress") // in_progress | completed
+  listeningAnswers Json?
+  readingAnswers   Json?
+  writingAnswers   Json?
+  speakingAnswers  Json?
+  listeningScore   Float?
+  readingScore     Float?
+  writingScore     Float?
+  speakingScore    Float?
+  totalBand        String?     // "5.0", "5.5", "6.0"...
+  answers          Json?
+  feedback         Json?
+  startedAt        DateTime   @default(now()) @map("started_at")
+  completedAt      DateTime?  @map("completed_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  @@index([mockId, userId])
+  @@index([userId, status])
+  @@map("ielts_attempts")
+}
+
+model CefrMock {
+  id          String   @id @default(cuid())
+  title       String
+  level       String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  description String?
+  duration    Int      // total duration in minutes
+  price       Float    @default(0)
+  isPaid      Boolean  @default(false)
+  status      String   @default("draft") // 'draft' | 'published'
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  listening   CefrListening?
+  reading     CefrReading?
+  writing     CefrWriting?
+  speaking    CefrSpeaking?
+  attempts    CefrAttempt[]
+
+  @@index([level, status])
+  @@map("cefr_mocks")
+}
+
+model CefrListening {
+  id        String    @id @default(cuid())
+  mockId    String    @unique @map("mock_id")
+  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int       @default(40) // minutes
+  sections  Json      // [{part: 1, questions: [...]}]
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("cefr_listening")
+}
+
+model CefrReading {
+  id        String    @id @default(cuid())
+  mockId    String    @unique @map("mock_id")
+  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int       @default(60) // minutes
+  passages  Json      // [{title, text, questions: [...]}]
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("cefr_reading")
+}
+
+model CefrWriting {
+  id        String   @id @default(cuid())
+  mockId    String   @unique @map("mock_id")
+  mock      CefrMock @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int      @default(80) // minutes
+  task11    Json     // {prompt, minWords: 150}
+  task12    Json     // {prompt, minWords: 150}
+  task2     Json     // {prompt, minWords: 250}
+  aiWeights Json     @default("{\"taskResponse\":25,\"coherence\":25,\"lexical\":25,\"grammar\":25}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("cefr_writing")
+}
+
+model CefrSpeaking {
+  id        String    @id @default(cuid())
+  mockId    String    @unique @map("mock_id")
+  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int       @default(15) // minutes
+  task1     Json      // {questions: [...]}
+  task2     Json      // {topic, prepTime: 60, speakTime: 120}
+  task3     Json      // {questions: [...]}
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("cefr_speaking")
+}
+
+model CefrAttempt {
+  id               String    @id @default(cuid())
+  mockId           String    @map("mock_id")
+  mock             CefrMock  @relation(fields: [mockId], references: [id])
+  userId           String    @map("user_id")
+  status           String    @default("in_progress") // in_progress | completed
+  listeningAnswers Json?
+  readingAnswers   Json?
+  writingAnswers   Json?
+  speakingAnswers  Json?
+  listeningScore   Float?
+  readingScore     Float?
+  writingScore     Float?
+  speakingScore    Float?
+  totalScore       Float?
+  cefrLevel        String?
+  answers          Json?
+  feedback         Json?
+  startedAt        DateTime  @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([mockId, userId])
+  @@index([userId, status])
+  @@map("cefr_attempts")
 }

@@ -29,11 +29,11 @@ export default function ExamPaymentPage() {
   const fetchPaymentInstructions = async () => {
     try {
       if (user?.centerId) {
-        const { data: center } = await api.get(`/centers/${user.centerId}`);
+        const { data: center } = await api.get(`/api/centers/${user.centerId}`);
         setPaymentInstructions(center.paymentInstructions || '');
         setCenterName(center.name);
       } else {
-        const { data: settings } = await api.get('/admin/settings');
+        const { data: settings } = await api.get('/api/admin/settings');
         setPaymentInstructions(settings.paymentInstructions || '');
       }
     } catch (error) {
@@ -50,9 +50,9 @@ export default function ExamPaymentPage() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const up = await api.post('/uploads/payment-proof', fd);
+      const up = await api.post('/api/uploads/payment-proof', fd);
       const key = up.data.storageKey as string;
-      await api.post('/manual-payments', { examId, screenshotKey: key, amountNote: amountNote || undefined });
+      await api.post('/api/manual-payments', { examId, screenshotKey: key, amountNote: amountNote || undefined });
       setDone(true);
       toast.success('So‘rov yuborildi. Admin tasdiqlashini kuting.');
     } catch (e: any) {

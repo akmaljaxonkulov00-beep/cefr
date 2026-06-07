@@ -24,7 +24,7 @@ export default function TeacherPage() {
 
   const fetchStudents = async () => {
     try {
-      const { data } = await api.get('/users?role=STUDENT');
+      const { data } = await api.get('/api/users?role=STUDENT');
       setStudents(data);
     } catch {}
     setLoading(false);
@@ -33,7 +33,7 @@ export default function TeacherPage() {
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/exams', {
+      await api.post('/api/exams', {
         ...examForm,
         questions: [
           { question: 'Sample question 1?', type: 'MCQ', options: ['A', 'B', 'C', 'D'], answer: 'A', order: 1 },

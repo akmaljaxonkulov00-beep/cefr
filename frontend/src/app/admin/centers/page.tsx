@@ -13,7 +13,7 @@ export default function AdminCenters() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingCenter, setEditingCenter] = useState<any>(null);
-  const [newCenter, setNewCenter] = useState({ name: '', address: '', mockLimit: 100 });
+  const [newCenter, setNewCenter] = useState({ name: '', address: '', phone: '', mockLimit: 100, studentLimit: 100, isVip: false });
 
   useEffect(() => {
     fetchCenters();
@@ -21,7 +21,7 @@ export default function AdminCenters() {
 
   const fetchCenters = async () => {
     try {
-      const { data } = await api.get('/centers');
+      const { data } = await api.get('/api/centers');
       setCenters(data);
     } catch (error) {
       console.error('Failed to fetch centers');
@@ -49,15 +49,18 @@ export default function AdminCenters() {
       const adminEmail = `admin-${newCenter.name.toLowerCase().replace(/\s+/g, '-')}@mockcefr.uz`;
       const adminPassword = generatePassword();
       
-      await api.post('/centers', { 
+      await api.post('/api/centers', { 
         name: newCenter.name, 
         address: newCenter.address,
+        phone: newCenter.phone,
         mockLimit: newCenter.mockLimit,
+        studentLimit: newCenter.studentLimit,
+        isVip: newCenter.isVip,
         adminEmail,
         adminPassword
       });
       toast.success('Markaz yaratildi. Admin login: ' + adminEmail + ', Parol: ' + adminPassword);
-      setNewCenter({ name: '', address: '', mockLimit: 100 });
+      setNewCenter({ name: '', address: '', phone: '', mockLimit: 100, studentLimit: 100, isVip: false });
       setShowAdd(false);
       fetchCenters();
     } catch (error: any) {
@@ -78,8 +81,28 @@ export default function AdminCenters() {
 
   const handleUpdateLimit = async (id: string, mockLimit: number) => {
     try {
-      await api.patch(`/centers/${id}/limit`, { mockLimit });
+      await api.patch(`/api/centers/${id}/limit`, { mockLimit });
       toast.success('Limit yangilandi');
+      fetchCenters();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Xato');
+    }
+  };
+
+  const handleToggleVip = async (id: string, isVip: boolean) => {
+    try {
+      await api.patch(`/api/centers/${id}/vip`, { isVip });
+      toast.success(isVip ? 'VIP yoqildi' : 'VIP o\'chirildi');
+      fetchCenters();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Xato');
+    }
+  };
+
+  const handleSetStudentLimit = async (id: string, studentLimit: number) => {
+    try {
+      await api.patch(`/api/centers/${id}/student-limit`, { studentLimit });
+      toast.success('O\'quvchi limiti yangilandi');
       fetchCenters();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Xato');
@@ -174,13 +197,62 @@ export default function AdminCenters() {
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2">Mock Limit</label>
+                    <label className="block text-gray-400 text-sm mb-2">Telefon</label>
                     <input
-                      type="number"
-                      value={newCenter.mockLimit}
-                      onChange={(e) => setNewCenter({ ...newCenter, mockLimit: parseInt(e.target.value) })}
+                      type="text"
+                      value={newCenter.phone}
+                      onChange={(e) => setNewCenter({ ...newCenter, phone: e.target.value })}
                       className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                      placeholder="+998 90 123 45 67"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2">Mock Limit</label>
+                    <div className="flex items-center gap-3 mb-2">
+                      <input
+                        type="checkbox"
+                        id="unlimited-new"
+                        checked={newCenter.mockLimit === -1}
+                        onChange={(e) => {
+                          setNewCenter({ ...newCenter, mockLimit: e.target.checked ? -1 : 100 });
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="unlimited-new" className="text-white text-sm">Cheksiz</label>
+                    </div>
+                    {newCenter.mockLimit !== -1 && (
+                      <input
+                        type="number"
+                        value={newCenter.mockLimit ?? ''}
+                        onChange={(e) => setNewCenter({ ...newCenter, mockLimit: e.target.value ? parseInt(e.target.value) : 100 })}
+                        className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                        min={0}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2">O'quvchi Limiti</label>
+                    <div className="flex items-center gap-3 mb-2">
+                      <input
+                        type="checkbox"
+                        id="unlimited-students-new"
+                        checked={newCenter.studentLimit === -1}
+                        onChange={(e) => {
+                          setNewCenter({ ...newCenter, studentLimit: e.target.checked ? -1 : 100 });
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="unlimited-students-new" className="text-white text-sm">Cheksiz</label>
+                    </div>
+                    {newCenter.studentLimit !== -1 && (
+                      <input
+                        type="number"
+                        value={newCenter.studentLimit ?? ''}
+                        onChange={(e) => setNewCenter({ ...newCenter, studentLimit: e.target.value ? parseInt(e.target.value) : 100 })}
+                        className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                        min={0}
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -247,12 +319,27 @@ export default function AdminCenters() {
                   </div>
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">Mock Limit</label>
-                    <input
-                      type="number"
-                      value={editingCenter.mockLimit || 100}
-                      onChange={(e) => setEditingCenter({ ...editingCenter, mockLimit: parseInt(e.target.value) })}
-                      className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                    />
+                    <div className="flex items-center gap-3 mb-2">
+                      <input
+                        type="checkbox"
+                        id="unlimited-edit"
+                        checked={editingCenter.mockLimit === -1}
+                        onChange={(e) => {
+                          setEditingCenter({ ...editingCenter, mockLimit: e.target.checked ? -1 : 100 });
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="unlimited-edit" className="text-white text-sm">Cheksiz</label>
+                    </div>
+                    {editingCenter.mockLimit !== -1 && (
+                      <input
+                        type="number"
+                        value={editingCenter.mockLimit ?? ''}
+                        onChange={(e) => setEditingCenter({ ...editingCenter, mockLimit: e.target.value ? parseInt(e.target.value) : 100 })}
+                        className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                        min={0}
+                      />
+                    )}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-gray-400 text-sm mb-2">To'lov Ma'lumotlari</label>
@@ -286,79 +373,115 @@ export default function AdminCenters() {
             </div>
           ) : (
             <div className="glass-dark rounded-2xl p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="text-left p-3 text-gray-400">Nomi</th>
-                      <th className="text-left p-3 text-gray-400">Manzil</th>
-                      <th className="text-left p-3 text-gray-400">Admin Email</th>
-                      <th className="text-left p-3 text-gray-400">Admin Parol</th>
-                      <th className="text-left p-3 text-gray-400">O'quvchilar</th>
-                      <th className="text-left p-3 text-gray-400">Mock Limit</th>
-                      <th className="text-left p-3 text-gray-400">Aksiya</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {centers.map((center: any) => (
-                      <tr key={center.id} className="border-b border-gray-800">
-                        <td className="p-3 text-white">{center.name}</td>
-                        <td className="p-3 text-gray-400">{center.address || '—'}</td>
-                        <td className="p-3 text-gray-300 text-xs">
-                          {center.adminEmail ? (
-                            <div className="flex items-center gap-1">
-                              <span>{center.adminEmail}</span>
-                              <button onClick={() => copyToClipboard(center.adminEmail)} className="text-primary-400 hover:text-primary-300">
-                                <Copy size={12} />
-                              </button>
-                            </div>
-                          ) : '—'}
-                        </td>
-                        <td className="p-3 text-gray-300 text-xs">
-                          {center.adminPassword ? (
-                            <div className="flex items-center gap-1">
-                              <span>••••••••••••</span>
-                              <button onClick={() => copyToClipboard(center.adminPassword)} className="text-primary-400 hover:text-primary-300">
-                                <Copy size={12} />
-                              </button>
-                            </div>
-                          ) : '—'}
-                        </td>
-                        <td className="p-3 text-gray-300">{center._count?.users || 0}</td>
-                        <td className="p-3 text-gray-300">
-                          <input
-                            type="number"
-                            defaultValue={center.mockLimit || 100}
-                            onBlur={(e) => handleUpdateLimit(center.id, parseInt(e.target.value))}
-                            className="w-20 bg-white/5 border border-gray-700 rounded px-2 py-1 text-white"
-                          />
-                        </td>
-                        <td className="p-3 flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleEdit(center)}
-                            className="text-xs px-2 py-1 rounded-lg bg-blue-600/80 text-white"
-                          >
-                            <Edit size={12} />
-                          </button>
-                          <button
-                            onClick={() => handleRegeneratePassword(center.id)}
-                            className="text-xs px-2 py-1 rounded-lg bg-amber-600/80 text-white"
-                            title="Parolni yangilash"
-                          >
-                            <Key size={12} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(center.id)}
-                            className="text-xs px-2 py-1 rounded-lg bg-red-600/80 text-white"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </td>
+              {centers.length === 0 ? (
+                <div className="text-center py-10">
+                  <Building2 size={48} className="mx-auto text-gray-600 mb-4" />
+                  <p className="text-gray-400">Hozircha markazlar mavjud emas</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-800">
+                        <th className="text-left p-3 text-gray-400">Nomi</th>
+                        <th className="text-left p-3 text-gray-400">Manzil</th>
+                        <th className="text-left p-3 text-gray-400">Telefon</th>
+                        <th className="text-left p-3 text-gray-400">Admin Email</th>
+                        <th className="text-left p-3 text-gray-400">Admin Parol</th>
+                        <th className="text-left p-3 text-gray-400">O'quvchilar</th>
+                        <th className="text-left p-3 text-gray-400">Mock Limit</th>
+                        <th className="text-left p-3 text-gray-400">O'quvchi Limit</th>
+                        <th className="text-left p-3 text-gray-400">Status</th>
+                        <th className="text-left p-3 text-gray-400">Aksiya</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {centers.map((center: any) => (
+                        <tr key={center.id} className="border-b border-gray-800">
+                          <td className="p-3 text-white">{center.name}</td>
+                          <td className="p-3 text-gray-400">{center.address || '—'}</td>
+                          <td className="p-3 text-gray-400">{center.phone || '—'}</td>
+                          <td className="p-3 text-gray-300 text-xs">
+                            {center.adminEmail ? (
+                              <div className="flex items-center gap-1">
+                                <span>{center.adminEmail}</span>
+                                <button onClick={() => copyToClipboard(center.adminEmail)} className="text-primary-400 hover:text-primary-300">
+                                  <Copy size={12} />
+                                </button>
+                              </div>
+                            ) : '—'}
+                          </td>
+                          <td className="p-3 text-gray-300 text-xs">
+                            {center.adminPassword ? (
+                              <div className="flex items-center gap-1">
+                                <span>••••••••••••</span>
+                                <button onClick={() => copyToClipboard(center.adminPassword)} className="text-primary-400 hover:text-primary-300">
+                                  <Copy size={12} />
+                                </button>
+                              </div>
+                            ) : '—'}
+                          </td>
+                          <td className="p-3 text-gray-300">{center._count?.users || 0}</td>
+                          <td className="p-3 text-gray-300">
+                            <input
+                              type="number"
+                              defaultValue={center.mockLimit || 100}
+                              onBlur={(e) => handleUpdateLimit(center.id, parseInt(e.target.value))}
+                              className="w-20 bg-white/5 border border-gray-700 rounded px-2 py-1 text-white"
+                            />
+                          </td>
+                          <td className="p-3 text-gray-300">
+                            <input
+                              type="number"
+                              defaultValue={center.studentLimit || 100}
+                              onBlur={(e) => handleSetStudentLimit(center.id, parseInt(e.target.value))}
+                              className="w-20 bg-white/5 border border-gray-700 rounded px-2 py-1 text-white"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="flex gap-2">
+                              {center.isVip && (
+                                <span className="px-2 py-1 rounded-lg bg-yellow-600/80 text-white text-xs">⭐ VIP</span>
+                              )}
+                              {center.isActive !== false && (
+                                <span className="px-2 py-1 rounded-lg bg-green-600/80 text-white text-xs">Aktiv</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => handleEdit(center)}
+                              className="text-xs px-2 py-1 rounded-lg bg-blue-600/80 text-white"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleVip(center.id, !center.isVip)}
+                              className={`text-xs px-2 py-1 rounded-lg ${center.isVip ? 'bg-gray-600/80' : 'bg-yellow-600/80'} text-white`}
+                              title={center.isVip ? 'VIP olib tashlash' : 'VIP qilish'}
+                            >
+                              ⭐
+                            </button>
+                            <button
+                              onClick={() => handleRegeneratePassword(center.id)}
+                              className="text-xs px-2 py-1 rounded-lg bg-amber-600/80 text-white"
+                              title="Parolni yangilash"
+                            >
+                              <Key size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(center.id)}
+                              className="text-xs px-2 py-1 rounded-lg bg-red-600/80 text-white"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </motion.div>

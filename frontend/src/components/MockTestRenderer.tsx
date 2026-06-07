@@ -85,7 +85,7 @@ export default function MockTestRenderer({ testId, onComplete }: MockTestRendere
 
   const fetchTest = async () => {
     try {
-      const { data } = await api.get(`/exams/${testId}`);
+      const { data } = await api.get(`/api/exams/${testId}`);
       setMockTest(data);
       setTimeRemaining(data.metadata.duration * 60);
     } catch (error) {

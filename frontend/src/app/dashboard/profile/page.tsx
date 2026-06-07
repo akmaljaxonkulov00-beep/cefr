@@ -23,12 +23,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/auth/profile').then(({ data }) => {
+      api.get('/api/auth/profile').then(({ data }) => {
         setName(data.name || '');
         setAvatar(data.avatar || '');
         setEmail(data.email || '');
       }),
-      api.get('/manual-payments/mine').then(({ data }) => setPayments(data)),
+      api.get('/api/manual-payments/mine').then(({ data }) => setPayments(data)),
     ])
       .catch(() => toast.error('Ma’lumot yuklanmadi'))
       .finally(() => setLoading(false));
@@ -38,7 +38,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put('/users/profile', { name, avatar: avatar || undefined });
+      await api.put('/api/users/profile', { name, avatar: avatar || undefined });
       toast.success('Profil saqlandi');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Saqlashda xato');

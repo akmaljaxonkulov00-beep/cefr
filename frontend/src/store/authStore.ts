@@ -1,59 +1,51 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import Cookies from 'js-cookie'
 
 interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  avatar?: string;
-  xp?: number;
-  streak?: number;
-  centerId?: string;
+  id: string
+  email: string
+  role: string
+  name?: string
+  centerId?: string
 }
 
 interface AuthStore {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-  setUser: (user: User) => void;
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  setToken: (token: string) => void
+  setUser: (user: User) => void
+  logout: () => void
 }
 
-const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
 
-function setAuthCookie(token: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${AUTH_COOKIE_MAX_AGE}; SameSite=Lax`;
-}
+      setToken: (token: string) => {
+        Cookies.set('auth-token', token, {
+          expires: 7,
+          secure: false,
+          sameSite: 'lax',
+        })
+        set({ token, isAuthenticated: true })
+      },
 
-function clearAuthCookie() {
-  if (typeof document === 'undefined') return;
-  document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax';
-}
+      setUser: (user: User) => {
+        set({ user })
+      },
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
-  isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('token') : false,
-
-  login: (token, user) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    setAuthCookie(token);
-    set({ user, token, isAuthenticated: true });
-  },
-
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    clearAuthCookie();
-    set({ user: null, token: null, isAuthenticated: false });
-    window.location.href = '/';
-  },
-
-  setUser: (user) => {
-    localStorage.setItem('user', JSON.stringify(user));
-    set({ user });
-  },
-}));
+      logout: () => {
+        Cookies.remove('auth-token')
+        set({ token: null, user: null, isAuthenticated: false })
+      },
+    }),
+    {
+      name: 'auth-storage',
+    }
+  )
+)

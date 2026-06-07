@@ -16,7 +16,7 @@ export default function CenterAdminStudents() {
 
   const fetchData = async () => {
     try {
-      const { data } = await api.get('/users/center-students');
+      const { data } = await api.get('/api/users/center-students');
       setStudents(data);
     } catch (error) {
       console.error('Failed to fetch students');

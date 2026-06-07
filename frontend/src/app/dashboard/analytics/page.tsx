@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get('/analytics/my'), api.get('/ai/roadmap')])
+    Promise.all([api.get('/api/analytics/my'), api.get('/api/ai/roadmap')])
       .then(([a, r]) => {
         setAnalytics(a.data);
         setRoadmap(r.data);

@@ -45,7 +45,7 @@ export default function AiReportDashboard({
 
   const generateReport = async () => {
     try {
-      const { data } = await api.post('/ai/diagnostic-report', {
+      const { data } = await api.post('/api/ai/diagnostic-report', {
         testType,
         readingScore,
         listeningScore,

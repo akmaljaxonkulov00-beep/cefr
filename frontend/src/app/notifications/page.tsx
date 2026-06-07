@@ -34,7 +34,7 @@ export default function NotificationsPage() {
 
   const markRead = async (id: string) => {
     try {
-      await api.patch(`/notifications/${id}/read`);
+      await api.patch(`/api/notifications/${id}/read`);
       setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     } catch {
       toast.error('Could not update');

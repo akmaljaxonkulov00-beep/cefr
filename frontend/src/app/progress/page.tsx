@@ -12,7 +12,7 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/ai/roadmap')
+    api.get('/api/ai/roadmap')
       .then(({ data }) => setRoadmap(data))
       .catch(() => {})
       .finally(() => setLoading(false));

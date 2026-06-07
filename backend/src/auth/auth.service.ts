@@ -16,25 +16,27 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: { email: string; password: string; name: string; centerId?: string }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Email already registered');
+  async register(dto: { email: string; password: string; name: string; centerId?: string; phone?: string }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email.toLowerCase().trim() } });
+    if (existing) throw new ConflictException('Bu email allaqachon ro\'yxatdan o\'tgan');
 
     // If centerId is provided, verify it exists
     if (dto.centerId) {
       const center = await this.prisma.center.findUnique({ where: { id: dto.centerId } });
-      if (!center) throw new BadRequestException('Invalid center ID');
+      if (!center) throw new BadRequestException('Noto\'g\'ri markaz ID');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
+        email: dto.email.toLowerCase().trim(),
         password: hashedPassword,
         name: dto.name,
         centerId: dto.centerId,
-        role: dto.centerId ? 'STUDENT' : 'STUDENT',
+        phone: dto.phone,
+        role: 'STUDENT',
+        emailVerified: true,
       },
     });
 
@@ -50,17 +52,55 @@ export class AuthService {
   }
 
   async login(dto: { email: string; password: string }) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    try {
+      const email = dto.email.toLowerCase().trim();
+      console.log('[AUTH] Login attempt:', email);
+      
+      const user = await this.prisma.user.findFirst({
+        where: { 
+          email: {
+            equals: email,
+            mode: 'insensitive'
+          }
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          avatar: true,
+          password: true,
+          centerId: true,
+        },
+      });
+      
+      console.log('[AUTH] User found:', !!user);
 
-    if (!user.password) {
-      throw new UnauthorizedException('This account uses Google sign-in.');
+      if (!user) {
+        const allUsers = await this.prisma.user.findMany({ 
+          select: { email: true, role: true } 
+        });
+        console.log('[AUTH] All users in DB:', allUsers);
+        throw new UnauthorizedException('Foydalanuvchi topilmadi');
+      }
+
+      if (!user.password) {
+        throw new UnauthorizedException('Bu akkaunt Google orqali ro\'yxatdan o\'tgan');
+      }
+
+      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+      console.log('[AUTH] Password valid:', isPasswordValid);
+      
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Parol noto\'g\'ri');
+      }
+
+      return this.generateToken(user);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      console.error('[AUTH] Login error:', error);
+      throw error;
     }
-
-    const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
-
-    return this.generateToken(user);
   }
 
   async googleLogin(dto: { sub: string; email: string; name: string }) {
@@ -138,7 +178,7 @@ export class AuthService {
     return { message: 'Password updated. You can sign in with your new password.' };
   }
 
-  private generateToken(user: { id: string; email: string; name: string; role: string; avatar?: string | null }) {
+  private generateToken(user: { id: string; email: string; name: string; role: string; avatar?: string | null; centerId?: string | null }) {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -148,6 +188,7 @@ export class AuthService {
         name: user.name,
         role: user.role,
         avatar: user.avatar,
+        centerId: user.centerId,
       },
     };
   }

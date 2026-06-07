@@ -8,6 +8,8 @@ import api from '@/lib/api';
 import { Clock, AlertTriangle, ChevronLeft, ChevronRight, CheckCircle, Shield, CreditCard, Mic, MicOff, Play, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { saveExamProgress, loadExamProgress, clearExamProgress } from '@/lib/exam-persistence';
+import { getUser } from '@/lib/auth';
 
 type Access = {
   unlocked: boolean;
@@ -76,6 +78,57 @@ export default function ExamDetail() {
     },
     [id, pushIntegrity],
   );
+
+  // Auto-save exam progress every 30 seconds
+  useEffect(() => {
+    if (!started || finished) return;
+
+    const autoSave = setInterval(() => {
+      const user = getUser();
+      if (user && id) {
+        saveExamProgress(id, user.id, {
+          answers,
+          timeLeft,
+          currentQuestion,
+          currentPart,
+          savedAt: new Date().toISOString(),
+        });
+      }
+    }, 30000);
+
+    return () => clearInterval(autoSave);
+  }, [started, finished, answers, timeLeft, currentQuestion, currentPart, id]);
+
+  // Load saved progress on mount
+  useEffect(() => {
+    const user = getUser();
+    if (user && id && !started) {
+      const saved = loadExamProgress(id, user.id);
+      if (saved && saved.answers) {
+        const timeDiff = saved.savedAt ? new Date().getTime() - new Date(saved.savedAt).getTime() : 0;
+        const minutesAgo = Math.floor(timeDiff / 60000);
+        
+        if (confirm(`Davom ettirilmagan imtihon topildi (${minutesAgo} daqiqa oldin). Davom ettirishni xohlaysizmi?`)) {
+          setAnswers(saved.answers);
+          setTimeLeft(saved.timeLeft || (exam?.duration || 60) * 60);
+          setCurrentQuestion(saved.currentQuestion || 0);
+          setCurrentPart(saved.currentPart || 'READING');
+        } else {
+          clearExamProgress(id, user.id);
+        }
+      }
+    }
+  }, [id, started, exam]);
+
+  // Clear saved progress after successful submit
+  useEffect(() => {
+    if (result) {
+      const user = getUser();
+      if (user && id) {
+        clearExamProgress(id, user.id);
+      }
+    }
+  }, [result, id]);
 
   useEffect(() => {
     if (!id) return;

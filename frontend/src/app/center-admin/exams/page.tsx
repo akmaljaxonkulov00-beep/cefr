@@ -34,7 +34,7 @@ export default function CenterAdminExams() {
 
   const fetchData = async () => {
     try {
-      const { data } = await api.get('/exams');
+      const { data } = await api.get('/api/exams');
       setExams(data);
     } catch (error) {
       console.error('Failed to fetch exams');
@@ -61,7 +61,7 @@ export default function CenterAdminExams() {
         formData.append('type', 'READING');
         formData.append('duration', uploadData.duration.toString());
         formData.append('level', uploadData.level);
-        await api.post('/exams/upload-pdf', formData, {
+        await api.post('/api/exams/upload-pdf', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -73,7 +73,7 @@ export default function CenterAdminExams() {
         formData.append('type', 'LISTENING');
         formData.append('duration', uploadData.duration.toString());
         formData.append('level', uploadData.level);
-        await api.post('/exams/upload-pdf', formData, {
+        await api.post('/api/exams/upload-pdf', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -85,7 +85,7 @@ export default function CenterAdminExams() {
         formData.append('type', 'WRITING');
         formData.append('duration', uploadData.duration.toString());
         formData.append('level', uploadData.level);
-        await api.post('/exams/upload-pdf', formData, {
+        await api.post('/api/exams/upload-pdf', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -97,7 +97,7 @@ export default function CenterAdminExams() {
         formData.append('type', 'SPEAKING');
         formData.append('duration', uploadData.duration.toString());
         formData.append('level', uploadData.level);
-        await api.post('/exams/upload-pdf', formData, {
+        await api.post('/api/exams/upload-pdf', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -117,7 +117,7 @@ export default function CenterAdminExams() {
     setUploading(true);
 
     try {
-      await api.post('/exams/create-mock', mockTest);
+      await api.post('/api/exams/create-mock', mockTest);
       toast.success('Mock yaratildi');
       setShowUpload(false);
       fetchData();

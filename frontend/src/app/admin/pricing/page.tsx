@@ -46,7 +46,7 @@ export default function AdminPricing() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.patch('/settings/pricing', editPrices);
+      await api.patch('/api/settings/pricing', editPrices);
       toast.success('Narxlar yangilandi');
       fetchPrices();
     } catch (error: any) {

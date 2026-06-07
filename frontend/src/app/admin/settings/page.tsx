@@ -50,7 +50,7 @@ export default function AdminSettingsPage() {
     
     setSaving(true);
     try {
-      await api.put('/admin/settings', settings);
+      await api.put('/api/admin/settings', settings);
       toast.success('Sozlamalar saqlandi');
     } catch (error) {
       toast.error('Sozlamalar saqlanmadi');

@@ -17,7 +17,7 @@ export default function CenterAdminAnalytics() {
   const fetchData = async () => {
     try {
       const [studentsRes] = await Promise.all([
-        api.get('/users/center-students'),
+        api.get('/api/users/center-students'),
       ]);
       setStats({
         totalStudents: studentsRes.data.length,

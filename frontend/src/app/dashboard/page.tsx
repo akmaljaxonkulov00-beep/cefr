@@ -15,8 +15,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [analyticsRes, resultsRes] = await Promise.all([
-          api.get('/analytics/my'),
-          api.get('/exams/results/mine'),
+          api.get('/api/analytics/my'),
+          api.get('/api/exams/results/mine'),
         ]);
         setStats(analyticsRes.data);
         setRecentResults(resultsRes.data.slice(0, 5));

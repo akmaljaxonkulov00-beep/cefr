@@ -14,25 +14,62 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { setToken, setUser } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      newErrors.email = 'Email kiritilishi shart';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Email formati noto\'g\'ri';
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = 'Parol kiritilishi shart';
+    } else if (password.length < 6) {
+      newErrors.password = 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      login(data.access_token, data.user);
-      toast.success('Welcome back!');
+      const { data } = await api.post('/api/auth/login', { email, password });
+      
+      // Handle both token and access_token formats
+      const token = data.token || data.access_token;
+      setToken(token);
+      setUser(data.user);
+      
+      toast.success('Muvaffaqiyatli kirildi!');
       
       const role = data.user.role;
-      if (role === 'TEACHER') router.push('/teacher');
+      if (role === 'SUPER_ADMIN') router.push('/admin');
       else if (role === 'CENTER_ADMIN') router.push('/center-admin');
-      else if (role === 'SUPER_ADMIN') router.push('/admin');
+      else if (role === 'STUDENT') router.push('/student/dashboard');
       else router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (!error.response) {
+        toast.error('Internet aloqasi yo\'q');
+      } else {
+        toast.error('Serverda xatolik, qayta urinib ko\'ring');
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +99,7 @@ export default function LoginPage() {
           <p className="text-gray-400">Sign in to continue your learning journey</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-dark rounded-2xl p-8 space-y-5">
+        <div className="glass-dark rounded-2xl p-8 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
             <div className="relative">
@@ -70,12 +107,18 @@ export default function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-10 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 transition"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: undefined });
+                }}
+                className={`w-full bg-white/5 border rounded-xl px-10 py-3 text-white placeholder-gray-500 focus:outline-none transition ${
+                  errors.email ? 'border-red-500' : 'border-gray-700 focus:border-primary-500'
+                }`}
                 placeholder="you@example.com"
                 required
               />
             </div>
+            {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div>
@@ -85,8 +128,13 @@ export default function LoginPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-10 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 transition"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors({ ...errors, password: undefined });
+                }}
+                className={`w-full bg-white/5 border rounded-xl px-10 py-3 text-white placeholder-gray-500 focus:outline-none transition ${
+                  errors.password ? 'border-red-500' : 'border-gray-700 focus:border-primary-500'
+                }`}
                 placeholder="••••••••"
                 required
               />
@@ -98,6 +146,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
             <div className="flex justify-end mt-2">
               <Link href="/forgot-password" className="text-sm text-primary-400 hover:text-primary-300">
                 Forgot password?
@@ -106,7 +155,7 @@ export default function LoginPage() {
           </div>
 
           <button
-            type="submit"
+            onClick={handleSubmit}
             disabled={loading}
             className="w-full gradient-bg hover:gradient-bg-hover text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
@@ -120,7 +169,7 @@ export default function LoginPage() {
               Sign up
             </Link>
           </p>
-        </form>
+        </div>
       </motion.div>
     </div>
   );

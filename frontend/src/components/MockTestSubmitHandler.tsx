@@ -40,7 +40,7 @@ export default function MockTestSubmitHandler({
         const formData = new FormData();
         formData.append('audio', speakingAudioBlob, 'recording.webm');
 
-        const transcribeResponse = await api.post('/ai/transcribe', formData, {
+        const transcribeResponse = await api.post('/api/ai/transcribe', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
@@ -55,7 +55,7 @@ export default function MockTestSubmitHandler({
       setProgress(50);
 
       // Step 2: Generate diagnostic report
-      const diagnosticResponse = await api.post('/ai/diagnostic-report', {
+      const diagnosticResponse = await api.post('/api/ai/diagnostic-report', {
         testType,
         readingScore,
         listeningScore,

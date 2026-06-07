@@ -64,7 +64,7 @@ export default function CreateMockPartPage() {
         sectionDuration,
       };
       
-      const { data } = await api.post('/mock-parts', payload);
+      const { data } = await api.post('/api/mock-parts', payload);
       toast.success('Part qoralama saqlandi');
       router.push('/admin/mocks/parts');
     } catch (error) {
@@ -89,7 +89,7 @@ export default function CreateMockPartPage() {
         sectionDuration,
       };
       
-      const { data } = await api.post('/mock-parts', payload);
+      const { data } = await api.post('/api/mock-parts', payload);
       toast.success('Part nashr qilindi');
       router.push('/admin/mocks/parts');
     } catch (error) {

@@ -80,10 +80,10 @@ export default function CreateMockPage() {
       };
       
       if (isEditing && params.id) {
-        await api.patch(`/mocks/${params.id}`, payload);
+        await api.patch(`/api/mocks/${params.id}`, payload);
         toast.success('Qoralama saqlandi');
       } else {
-        const { data } = await api.post('/mocks', payload);
+        const { data } = await api.post('/api/mocks', payload);
         toast.success('Mock yaratildi');
         router.push(`/admin/mocks/${data.id}/edit`);
       }
@@ -103,10 +103,10 @@ export default function CreateMockPage() {
       };
       
       if (isEditing && params.id) {
-        await api.patch(`/mocks/${params.id}`, payload);
+        await api.patch(`/api/mocks/${params.id}`, payload);
         toast.success('Mock nashr qilindi');
       } else {
-        const { data } = await api.post('/mocks', payload);
+        const { data } = await api.post('/api/mocks', payload);
         toast.success('Mock yaratildi va nashr qilindi');
         router.push(`/admin/mocks/${data.id}/edit`);
       }
@@ -308,7 +308,7 @@ function Step1({ formData, setFormData, onNext }: any) {
   );
 }
 
-function Step2({ type, activeTab, setActiveTab, onNext, onBack }: any) {
+function Step2({ type, activeTab, setActiveTab, onNext, onBack, listeningData, setListeningData, readingData, setReadingData, writingData, setWritingData, speakingData, setSpeakingData }: any) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-white mb-6">2. Bo'limlar</h2>
@@ -359,10 +359,14 @@ function Step2({ type, activeTab, setActiveTab, onNext, onBack }: any) {
 
       {/* Tab Content */}
       <div className="min-h-[300px]">
-        {activeTab === 'listening' && <ListeningSection type={type} />}
-        {activeTab === 'reading' && <ReadingSection type={type} />}
-        {activeTab === 'writing' && <WritingSection type={type} />}
-        {activeTab === 'speaking' && <SpeakingSection type={type} />}
+        {activeTab === 'listening' && <ListeningSection type={type} listeningData={listeningData} setListeningData={setListeningData} />}
+        {activeTab === 'reading' && <ReadingSection type={type} readingData={readingData} setReadingData={setReadingData} />}
+        {activeTab === 'writing' && (
+          <WritingSection type={type} writingData={writingData} setWritingData={setWritingData} />
+        )}
+        {activeTab === 'speaking' && (
+          <SpeakingSection type={type} speakingData={speakingData} setSpeakingData={setSpeakingData} />
+        )}
       </div>
 
       <div className="flex justify-between">
@@ -385,43 +389,169 @@ function Step2({ type, activeTab, setActiveTab, onNext, onBack }: any) {
   );
 }
 
-function ListeningSection({ type }: { type: string }) {
+function ListeningSection({ type, listeningData, setListeningData }: any) {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const { data } = await api.post('/api/upload/audio', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setListeningData({
+        ...listeningData,
+        recordings: [...(listeningData?.recordings || []), { url: data.url, name: file.name }]
+      });
+      toast.success('Audio yuklandi');
+    } catch (error) {
+      toast.error('Audio yuklanmadi');
+    }
+  };
+
+  const removeRecording = (index: number) => {
+    setListeningData({
+      ...listeningData,
+      recordings: (listeningData?.recordings || []).filter((_: any, i: number) => i !== index)
+    });
+  };
+
   return (
-    <div className="text-gray-400">
-      <p className="mb-4">
+    <div className="space-y-4">
+      <p className="text-gray-400 mb-4">
         {type === 'IELTS' 
           ? 'IELTS Listening: 4 recordings, 40 questions, 30 minutes'
           : 'CEFR Listening: 6 parts, multiple question types'
         }
       </p>
-      <div className="bg-white/5 rounded-xl p-6 text-center">
-        <Upload size={48} className="mx-auto mb-4 text-gray-600" />
-        <p>Bo'lim tarkibi hozircha ishlab chiqilmagan</p>
-        <p className="text-sm mt-2">Tez orada qo\'shiladi</p>
+
+      <div className="bg-white/5 rounded-xl p-6">
+        <label className="block text-gray-300 mb-4">Audio fayllar yuklash</label>
+        
+        <div className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-primary-500 transition cursor-pointer">
+          <input
+            type="file"
+            accept="audio/*"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+            id="audio-upload"
+          />
+          <label htmlFor="audio-upload" className="cursor-pointer">
+            <Upload size={48} className="mx-auto mb-4 text-gray-500" />
+            <p className="text-gray-400">Audio fayllarni bu yerga torting yoki yuklang</p>
+            <p className="text-gray-500 text-sm mt-2">MP3, WAV, M4A (max 50MB)</p>
+          </label>
+        </div>
+
+        {(listeningData?.recordings || []).length > 0 && (
+          <div className="mt-6 space-y-3">
+            <h4 className="text-white font-medium">Yuklangan audio fayllar:</h4>
+            {(listeningData?.recordings || []).map((rec: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🎵</span>
+                  <span className="text-gray-300">{rec.name}</span>
+                </div>
+                <button
+                  onClick={() => removeRecording(idx)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ReadingSection({ type }: { type: string }) {
+function ReadingSection({ type, readingData, setReadingData }: any) {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const { data } = await api.post('/api/upload/file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setReadingData({
+        ...readingData,
+        passages: [...(readingData?.passages || []), { url: data.url, name: file.name }]
+      });
+      toast.success('Fayl yuklandi');
+    } catch (error) {
+      toast.error('Fayl yuklanmadi');
+    }
+  };
+
+  const removePassage = (index: number) => {
+    setReadingData({
+      ...readingData,
+      passages: (readingData?.passages || []).filter((_: any, i: number) => i !== index)
+    });
+  };
+
   return (
-    <div className="text-gray-400">
-      <p className="mb-4">
+    <div className="space-y-4">
+      <p className="text-gray-400 mb-4">
         {type === 'IELTS' 
           ? 'IELTS Reading: 3 passages, 40 questions, 60 minutes'
           : 'CEFR Reading: 6 parts, multiple question types'
         }
       </p>
-      <div className="bg-white/5 rounded-xl p-6 text-center">
-        <Upload size={48} className="mx-auto mb-4 text-gray-600" />
-        <p>Bo'lim tarkibi hozircha ishlab chiqilmagan</p>
-        <p className="text-sm mt-2">Tez orada qo\'shiladi</p>
+
+      <div className="bg-white/5 rounded-xl p-6">
+        <label className="block text-gray-300 mb-4">Reading matnlari yuklash</label>
+        
+        <div className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-primary-500 transition cursor-pointer">
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.txt"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+            id="reading-upload"
+          />
+          <label htmlFor="reading-upload" className="cursor-pointer">
+            <Upload size={48} className="mx-auto mb-4 text-gray-500" />
+            <p className="text-gray-400">Reading matnlarini bu yerga torting yoki yuklang</p>
+            <p className="text-gray-500 text-sm mt-2">PDF, DOC, DOCX, TXT (max 20MB)</p>
+          </label>
+        </div>
+
+        {(readingData?.passages || []).length > 0 && (
+          <div className="mt-6 space-y-3">
+            <h4 className="text-white font-medium">Yuklangan matnlar:</h4>
+            {(readingData?.passages || []).map((passage: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📖</span>
+                  <span className="text-gray-300">{passage.name}</span>
+                </div>
+                <button
+                  onClick={() => removePassage(idx)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function WritingSection({ type }: { type: string }) {
+function WritingSection({ type, writingData, setWritingData }: { type: string; writingData: any; setWritingData: any }) {
   return (
     <div className="text-gray-400">
       <p className="mb-4">
@@ -439,7 +569,7 @@ function WritingSection({ type }: { type: string }) {
   );
 }
 
-function SpeakingSection({ type }: { type: string }) {
+function SpeakingSection({ type, speakingData, setSpeakingData }: { type: string; speakingData: any; setSpeakingData: any }) {
   return (
     <div className="text-gray-400">
       <p className="mb-4">

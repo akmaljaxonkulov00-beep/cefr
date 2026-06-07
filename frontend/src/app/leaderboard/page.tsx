@@ -11,7 +11,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/users/leaderboard')
+    api.get('/api/users/leaderboard')
       .then(({ data }) => setUsers(data))
       .catch(() => {})
       .finally(() => setLoading(false));

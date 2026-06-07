@@ -45,13 +45,13 @@ export default function StudentMocksPage() {
   const fetchData = async () => {
     try {
       // Fetch full mocks (existing functionality)
-      const { data: fullMocksData } = await api.get('/mocks', {
+      const { data: fullMocksData } = await api.get('/api/mocks', {
         params: { type: type === 'IELTS' ? 'IELTS' : 'CEFR', status: 'ACTIVE', limit: 10 }
       });
       setFullMocks(fullMocksData.mocks || []);
 
       // Fetch individual parts
-      const { data: partsData } = await api.get('/student/mock-parts', {
+      const { data: partsData } = await api.get('/api/student/mock-parts', {
         params: { type, skill }
       });
       setParts(partsData || []);
@@ -71,7 +71,7 @@ export default function StudentMocksPage() {
   const handleStart = async (partId: string) => {
     try {
       // Check access first
-      const { data: accessData } = await api.get('/mock-payments/check-access', {
+      const { data: accessData } = await api.get('/api/mock-payments/check-access', {
         params: { mockPartId: partId }
       });
 

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
@@ -10,7 +11,13 @@ api.interceptors.request.use((config) => {
     delete (config.headers as Record<string, unknown>)['Content-Type'];
   }
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
+    // Try to get token from multiple sources
+    const cookieToken = Cookies.get('auth-token');
+    const storageToken = localStorage.getItem('token');
+    const persistToken = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.token;
+    
+    const token = cookieToken || storageToken || persistToken;
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

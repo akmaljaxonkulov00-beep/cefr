@@ -11,15 +11,16 @@ export default function AdminReports() {
   const [participation, setParticipation] = useState<any>(null);
   const [centers, setCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('monthly');
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [period]);
 
   const fetchData = async () => {
     try {
       const [revenueRes, participationRes, centersRes] = await Promise.all([
-        api.get('/reports/revenue'),
+        api.get('/reports/revenue', { params: { period } }),
         api.get('/reports/participation'),
         api.get('/reports/centers'),
       ]);
@@ -39,6 +40,23 @@ export default function AdminReports() {
       <main className="flex-1 p-6 lg:p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-white mb-6">Hisobotlar</h1>
+
+          {/* Period Filter */}
+          <div className="flex gap-2 mb-6">
+            {['daily', 'weekly', 'monthly', 'yearly'].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  period === p
+                    ? 'gradient-bg text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
+              >
+                {p === 'daily' ? 'Kunlik' : p === 'weekly' ? 'Haftalik' : p === 'monthly' ? 'Oylik' : 'Yillik'}
+              </button>
+            ))}
+          </div>
 
           {loading ? (
             <div className="text-center py-10">

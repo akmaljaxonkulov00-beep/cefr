@@ -94,7 +94,7 @@ export default function AISpeakingPage() {
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
-      const { data } = await api.post<SpeakingResult>('/ai/speaking', formData);
+      const { data } = await api.post<SpeakingResult>('/api/ai/speaking', formData);
       setResult(data);
       setTranscript(data.transcript || '');
       toast.success('Groq STT + tahlil yakunlandi');

@@ -26,7 +26,7 @@ export default function CenterAdminPricing() {
 
   const fetchPrices = async () => {
     try {
-      const { data } = await api.get('/settings/pricing');
+      const { data } = await api.get('/api/settings/pricing');
       setPrices(data);
       setEditPrices({
         mockCefrUzs: data?.mockCefrUzs || 0,
@@ -46,7 +46,7 @@ export default function CenterAdminPricing() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.patch('/settings/pricing', editPrices);
+      await api.patch('/api/settings/pricing', editPrices);
       toast.success('Narxlar yangilandi');
       fetchPrices();
     } catch (error: any) {

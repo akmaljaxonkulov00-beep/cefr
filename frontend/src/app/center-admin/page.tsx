@@ -29,12 +29,12 @@ export default function CenterAdminDashboard() {
   const fetchData = async () => {
     try {
       const [studentsRes, resultsRes, revenueRes, participationRes, examsRes, centerRes] = await Promise.all([
-        api.get('/users/center-students'),
-        api.get('/results/center'),
-        api.get('/reports/revenue'),
-        api.get('/reports/participation'),
-        api.get('/exams'),
-        api.get(`/centers/${user?.centerId}`),
+        api.get('/api/users/center-students'),
+        api.get('/api/results/center'),
+        api.get('/api/reports/revenue'),
+        api.get('/api/reports/participation'),
+        api.get('/api/exams'),
+        api.get(`/api/centers/${user?.centerId}`),
       ]);
       setStudents(studentsRes.data);
       setResults(resultsRes.data);

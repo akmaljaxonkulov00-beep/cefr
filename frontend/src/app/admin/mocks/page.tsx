@@ -57,7 +57,7 @@ export default function AdminMocksPage() {
       if (filterType !== 'ALL') params.type = filterType;
       if (filterStatus !== 'ALL') params.status = filterStatus;
       
-      const { data } = await api.get('/mocks', { params });
+      const { data } = await api.get('/api/mocks', { params });
       setMocks(data.mocks);
       setFilteredMocks(data.mocks);
       setTotalPages(data.pagination.totalPages);
@@ -72,7 +72,7 @@ export default function AdminMocksPage() {
     if (!confirm('Rostdan ham bu mockni o\'chirmoqchimisiz?')) return;
 
     try {
-      await api.delete(`/mocks/${id}`);
+      await api.delete(`/api/mocks/${id}`);
       toast.success('Mock o\'chirildi');
       fetchMocks();
     } catch (error) {
@@ -82,7 +82,7 @@ export default function AdminMocksPage() {
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      await api.patch(`/mocks/${id}/status`, { status: currentStatus ? 'DRAFT' : 'ACTIVE' });
+      await api.patch(`/api/mocks/${id}/status`, { status: currentStatus ? 'DRAFT' : 'ACTIVE' });
       toast.success('Mock holati yangilandi');
       fetchMocks();
     } catch (error) {

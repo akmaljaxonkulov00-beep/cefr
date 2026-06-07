@@ -12,8 +12,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   @Get()
-  findAll(@Query('role') role?: string) {
-    return this.usersService.findAll(role);
+  findAll(@Query('role') role?: string, @CurrentUser('id') userId?: string, @CurrentUser('role') userRole?: string, @CurrentUser('centerId') centerId?: string) {
+    return this.usersService.findAll(role, userId, userRole, centerId);
   }
 
   @UseGuards(JwtAuthGuard)

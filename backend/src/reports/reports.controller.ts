@@ -12,8 +12,13 @@ export class ReportsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   @Get('revenue')
-  getRevenue(@CurrentUser('id') userId: string, @CurrentUser('role') role: string, @CurrentUser('centerId') centerId: string) {
-    return this.reportsService.getRevenue(userId, role, centerId);
+  getRevenue(
+    @CurrentUser('id') userId: string, 
+    @CurrentUser('role') role: string, 
+    @CurrentUser('centerId') centerId: string,
+    @Query('period') period: string = 'monthly'
+  ) {
+    return this.reportsService.getRevenue(userId, role, centerId, period);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

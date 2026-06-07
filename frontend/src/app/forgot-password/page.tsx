@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setDevToken(null);
     try {
-      const { data } = await api.post('/auth/forgot-password', { email });
+      const { data } = await api.post('/api/auth/forgot-password', { email });
       toast.success(data.message || 'Check your email.');
       if (data.resetToken) {
         setDevToken(data.resetToken);

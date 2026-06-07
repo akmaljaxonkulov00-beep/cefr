@@ -11,6 +11,8 @@ const getNavItems = (role: string | undefined) => {
     return [
       { href: '/admin', icon: LayoutDashboard, label: 'Admin Panel' },
       { href: '/admin/mocks', icon: BookOpen, label: 'Mocklar' },
+      { href: '/admin/ielts', icon: BookOpen, label: 'IELTS Mocklar' },
+      { href: '/admin/cefr', icon: BookOpen, label: 'CEFR Mocklar' },
       { href: '/admin/centers', icon: BookOpen, label: 'Markazlar' },
       { href: '/admin/pricing', icon: Trophy, label: 'Narxlar' },
       { href: '/admin/users', icon: UserCircle, label: 'Foydalanuvchilar' },
@@ -37,6 +39,8 @@ const getNavItems = (role: string | undefined) => {
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/profile', icon: UserCircle, label: 'Profile' },
     { href: '/exams', icon: BookOpen, label: 'Mock Exams' },
+    { href: '/ielts', icon: BookOpen, label: 'IELTS' },
+    { href: '/cefr', icon: BookOpen, label: 'CEFR' },
     { href: '/ai-speaking', icon: Mic, label: 'AI Speaking' },
     { href: '/ai-writing', icon: PenLine, label: 'AI Writing' },
     { href: '/results', icon: BarChart3, label: 'Results' },

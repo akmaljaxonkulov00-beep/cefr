@@ -27,7 +27,7 @@ export default function PaymentVerification() {
 
   const fetchPayments = async () => {
     try {
-      const { data } = await api.get('/mock-payments/pending');
+      const { data } = await api.get('/api/mock-payments/pending');
       setPayments(data);
     } catch (error) {
       toast.error('To\'lovlarni yuklab olinmadi');

@@ -34,7 +34,7 @@ export default function PaymentCardManager() {
 
   const fetchCards = async () => {
     try {
-      const { data } = await api.get('/admin/settings/payment-cards');
+      const { data } = await api.get('/api/admin/settings/payment-cards');
       setCards(data);
     } catch (error) {
       toast.error('Kartalarni yuklab olinmadi');
@@ -47,10 +47,10 @@ export default function PaymentCardManager() {
     e.preventDefault();
     try {
       if (editingCard) {
-        await api.patch(`/admin/settings/payment-cards/${editingCard.id}`, formData);
+        await api.patch(`/api/admin/settings/payment-cards/${editingCard.id}`, formData);
         toast.success('Karta yangilandi');
       } else {
-        await api.post('/admin/settings/payment-cards', formData);
+        await api.post('/api/admin/settings/payment-cards', formData);
         toast.success('Karta qo\'shildi');
       }
       setShowForm(false);

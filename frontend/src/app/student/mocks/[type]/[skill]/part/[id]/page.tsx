@@ -100,7 +100,7 @@ export default function StudentPartExamPage() {
 
   const fetchPart = async () => {
     try {
-      const { data } = await api.get(`/student/mock-parts/${partId}`);
+      const { data } = await api.get(`/api/student/mock-parts/${partId}`);
       setPart(data);
     } catch (error) {
       toast.error('Part yuklab olinmadi');

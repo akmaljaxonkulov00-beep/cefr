@@ -5,7 +5,27 @@ import { PrismaService } from '../common/prisma.service';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async getRevenue(userId: string, role: string, centerId: string) {
+  async getRevenue(userId: string, role: string, centerId: string, period: string = 'monthly') {
+    const now = new Date();
+    let startDate: Date;
+
+    switch(period) {
+      case 'daily':
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case 'weekly':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        break;
+      case 'monthly':
+        startDate = new Date(now.setMonth(now.getMonth() - 1));
+        break;
+      case 'yearly':
+        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+        break;
+      default:
+        startDate = new Date(now.setMonth(now.getMonth() - 1));
+    }
+
     if (role === 'CENTER_ADMIN') {
       // Center admin - faqat o'z markazi uchun
       const payments = await this.prisma.manualExamPayment.findMany({
@@ -14,6 +34,7 @@ export class ReportsService {
             centerId: centerId,
           },
           status: 'APPROVED',
+          createdAt: { gte: startDate },
         },
         include: {
           exam: true,
@@ -26,6 +47,9 @@ export class ReportsService {
       return {
         totalRevenue,
         paymentCount: payments.length,
+        period,
+        from: startDate,
+        to: new Date(),
         payments: payments.map(p => ({
           id: p.id,
           amount: p.exam.priceUzs,
@@ -38,7 +62,10 @@ export class ReportsService {
 
     // Super admin - umumiy
     const payments = await this.prisma.manualExamPayment.findMany({
-      where: { status: 'APPROVED' },
+      where: { 
+        status: 'APPROVED',
+        createdAt: { gte: startDate },
+      },
       include: { exam: true, user: true },
     });
 
@@ -47,6 +74,9 @@ export class ReportsService {
     return {
       totalRevenue,
       paymentCount: payments.length,
+      period,
+      from: startDate,
+      to: new Date(),
       payments: payments.map(p => ({
         id: p.id,
         amount: p.exam.priceUzs,

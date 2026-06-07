@@ -30,13 +30,12 @@ export default function AdminPage() {
 
   const loadCore = useCallback(async () => {
     try {
-      const [usersRes, subsRes, centersRes] = await Promise.all([
-        api.get('/users'),
-        api.get('/payments/subscriptions/all'),
-        api.get('/centers'),
+      const [usersRes, centersRes] = await Promise.all([
+        api.get('/api/users'),
+        api.get('/api/centers'),
       ]);
       setUsers(usersRes.data);
-      setSubscriptions(subsRes.data);
+      setSubscriptions([]); // No endpoint for subscriptions, use empty array
       setCenters(centersRes.data);
     } catch {
       toast.error('Ma’lumot yuklanmadi');
@@ -45,7 +44,7 @@ export default function AdminPage() {
 
   const loadPayments = useCallback(async () => {
     try {
-      const { data } = await api.get('/manual-payments/pending');
+      const { data } = await api.get('/api/mock-payments/pending');
       setPendingPayments(data);
     } catch {
       toast.error('To‘lovlar yuklanmadi');
@@ -54,7 +53,7 @@ export default function AdminPage() {
 
   const loadAi = useCallback(async () => {
     try {
-      const { data } = await api.get('/analytics/admin/ai-usage');
+      const { data } = await api.get('/api/analytics/admin/ai-usage');
       setAiUsage(data);
     } catch {
       toast.error('AI usage yuklanmadi');
@@ -63,8 +62,8 @@ export default function AdminPage() {
 
   const loadSuspicious = useCallback(async () => {
     try {
-      const { data } = await api.get('/exams/admin/suspicious-results');
-      setSuspicious(data);
+      // Endpoint doesn't exist in backend, use empty array
+      setSuspicious([]);
     } catch {
       toast.error('Shubhali natijalar yuklanmadi');
     }
@@ -72,7 +71,7 @@ export default function AdminPage() {
 
   const loadPricing = useCallback(async () => {
     try {
-      const { data } = await api.get('/settings');
+      const { data } = await api.get('/api/settings');
       setPrices(data);
     } catch {
       toast.error('Narxlar yuklanmadi');
@@ -114,7 +113,7 @@ export default function AdminPage() {
     const role = roleEdits[userId];
     if (!role) return;
     try {
-      await api.patch(`/users/${userId}/role`, { role });
+      await api.patch(`/api/users/${userId}/role`, { role });
       toast.success('Rol yangilandi');
       loadCore();
     } catch (e: any) {
@@ -128,7 +127,7 @@ export default function AdminPage() {
       return;
     }
     try {
-      await api.post('/centers', newCenter);
+      await api.post('/api/centers', newCenter);
       toast.success('Markaz yaratildi');
       setNewCenter({ name: '', address: '' });
       setShowAddCenter(false);
@@ -141,7 +140,7 @@ export default function AdminPage() {
   const deleteCenter = async (centerId: string) => {
     if (!confirm('Markazni o\'chirishni tasdiqlaysizmi?')) return;
     try {
-      await api.delete(`/centers/${centerId}`);
+      await api.delete(`/api/centers/${centerId}`);
       toast.success('Markaz o\'chirildi');
       loadCore();
     } catch (e: any) {
@@ -155,7 +154,7 @@ export default function AdminPage() {
       return;
     }
     try {
-      await api.post(`/centers/${newCenterAdmin.centerId}/admin`, {
+      await api.post(`/api/centers/${newCenterAdmin.centerId}/admin`, {
         email: newCenterAdmin.email,
         password: newCenterAdmin.password,
         name: newCenterAdmin.name,
@@ -171,7 +170,7 @@ export default function AdminPage() {
 
   const updatePrice = async (key: string, value: number) => {
     try {
-      await api.put('/settings', { key: `examPrices.${key}`, value });
+      await api.put('/api/settings', { key: `examPrices.${key}`, value });
       toast.success('Narx yangilandi');
       loadPricing();
     } catch (e: any) {

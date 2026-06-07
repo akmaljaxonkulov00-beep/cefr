@@ -47,7 +47,7 @@ export default function StudentPartResultPage() {
 
   const fetchResult = async () => {
     try {
-      const { data } = await api.get(`/student/mock-parts/${partId}/result`);
+      const { data } = await api.get(`/api/student/mock-parts/${partId}/result`);
       setResult(data);
     } catch (error) {
       toast.error('Natija yuklab olinmadi');

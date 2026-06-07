@@ -16,7 +16,7 @@ export default function CenterAdminResults() {
 
   const fetchData = async () => {
     try {
-      const { data } = await api.get('/exams/results/center');
+      const { data } = await api.get('/api/exams/results/center');
       setResults(data);
     } catch (error) {
       console.error('Failed to fetch results');

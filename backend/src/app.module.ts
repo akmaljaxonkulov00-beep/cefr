@@ -19,6 +19,8 @@ import { ReportsModule } from './reports/reports.module';
 import { MocksModule } from './mocks/mocks.module';
 import { MockPartsModule } from './mock-parts/mock-parts.module';
 import { MockPaymentsModule } from './mock-payments/mock-payments.module';
+import { IeltsModule } from './ielts/ielts.module';
+import { CefrModule } from './cefr/cefr.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { MockPaymentsModule } from './mock-payments/mock-payments.module';
     MocksModule,
     MockPartsModule,
     MockPaymentsModule,
+    IeltsModule,
+    CefrModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

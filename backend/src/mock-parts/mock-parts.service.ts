@@ -49,21 +49,26 @@ export class MockPartsService {
   async create(dto: any) {
     const { title, type, skill, partNumber, questions, audioUrl, audioPlaysOnce, passageText, passageFile, price, status } = dto;
 
-    return this.prisma.mockPart.create({
-      data: {
-        title,
-        type,
-        skill,
-        partNumber,
-        questions: questions || [],
-        audioUrl,
-        audioPlaysOnce: audioPlaysOnce ?? true,
-        passageText,
-        passageFile,
-        price: price || 0,
-        status: status || 'DRAFT',
-      },
-    });
+    try {
+      return this.prisma.mockPart.create({
+        data: {
+          title,
+          type,
+          skill,
+          partNumber,
+          questions: questions || [],
+          audioUrl,
+          audioPlaysOnce: audioPlaysOnce ?? true,
+          passageText,
+          passageFile,
+          price: price || 0,
+          status: status || 'DRAFT',
+        },
+      });
+    } catch (error) {
+      console.error('Error creating mock part:', error);
+      throw new BadRequestException('Mock part yaratishda xatolik: ' + (error as Error).message);
+    }
   }
 
   async update(id: string, dto: any) {

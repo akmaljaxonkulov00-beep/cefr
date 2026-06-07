@@ -41,7 +41,7 @@ export default function PracticePage() {
 
   const fetchExams = async () => {
     try {
-      const { data } = await api.get('/exams');
+      const { data } = await api.get('/api/exams');
       setExams(data);
     } catch (error) {
       toast.error('Imtihonlar yuklanmadi');
@@ -65,7 +65,7 @@ export default function PracticePage() {
     setSelectedExam(exam);
     setLoading(true);
     try {
-      const { data } = await api.get(`/exams/${exam.id}/parts`);
+      const { data } = await api.get(`/api/exams/${exam.id}/parts`);
       setExamParts(data as any);
     } catch (error) {
       toast.error('Qismlar yuklanmadi');
@@ -85,7 +85,7 @@ export default function PracticePage() {
     }
 
     try {
-      const { data } = await api.get(`/exams/${selectedExam.id}/questions`, {
+      const { data } = await api.get(`/api/exams/${selectedExam.id}/questions`, {
         params: { skill: selectedSkill, part: selectedPart },
       });
       

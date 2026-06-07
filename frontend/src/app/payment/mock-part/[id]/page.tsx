@@ -24,7 +24,7 @@ export default function MockPartPaymentPage() {
 
   const fetchMockPart = async () => {
     try {
-      const { data } = await api.get(`/student/mock-parts/${mockPartId}`);
+      const { data } = await api.get(`/api/student/mock-parts/${mockPartId}`);
       setMockPart(data);
     } catch (error) {
       toast.error('Part yuklab olinmadi');
@@ -35,7 +35,7 @@ export default function MockPartPaymentPage() {
 
   const checkAccess = async () => {
     try {
-      const { data } = await api.get('/mock-payments/check-access', {
+      const { data } = await api.get('/api/mock-payments/check-access', {
         params: { mockPartId }
       });
       setHasAccess(data.hasAccess);

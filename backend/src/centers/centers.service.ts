@@ -8,8 +8,14 @@ export class CentersService {
 
   findAll() {
     return this.prisma.center.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { users: true } } },
+      where: { id: { not: undefined } },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        phone: true,
+      },
     });
   }
 
@@ -76,6 +82,14 @@ export class CentersService {
     return { ok: true };
   }
 
+  async getCenterLimit(id: string) {
+    const center = await this.prisma.center.findUnique({
+      where: { id },
+      select: { id: true, name: true, mockLimit: true }
+    });
+    return center;
+  }
+
   async updateLimit(id: string, mockLimit: number) {
     return this.prisma.center.update({
       where: { id },
@@ -96,6 +110,20 @@ export class CentersService {
     return this.prisma.center.update({
       where: { id },
       data: updateData,
+    });
+  }
+
+  async toggleVip(id: string, isVip: boolean) {
+    return this.prisma.center.update({
+      where: { id },
+      data: { isVip },
+    });
+  }
+
+  async setStudentLimit(id: string, studentLimit: number) {
+    return this.prisma.center.update({
+      where: { id },
+      data: { studentLimit },
     });
   }
 }

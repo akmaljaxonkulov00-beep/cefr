@@ -33,7 +33,7 @@ export default function PaymentCheckUpload({ mockPartId, amount, mockTitle, onSu
     setStatus('uploading');
 
     try {
-      await api.post('/mock-payments/submit-check', {
+      await api.post('/api/mock-payments/submit-check', {
         mockPartId,
         checkImageUrl,
       });
@@ -44,7 +44,7 @@ export default function PaymentCheckUpload({ mockPartId, amount, mockTitle, onSu
       // Poll for status
       const pollInterval = setInterval(async () => {
         try {
-          const { data } = await api.get('/mock-payments/check-access', {
+          const { data } = await api.get('/api/mock-payments/check-access', {
             params: { mockPartId },
           });
 

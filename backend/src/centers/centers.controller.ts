@@ -13,6 +13,12 @@ export class CentersController {
     return this.centersService.findAll();
   }
 
+  @Get(':id/limit')
+  async getCenterLimit(@Param('id') id: string) {
+    const center = await this.centersService.getCenterLimit(id);
+    return center || { mockLimit: 100 };
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN')
   @Get('admin')
@@ -60,5 +66,19 @@ export class CentersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: { name?: string; address?: string; phone?: string; email?: string; mockLimit?: number; adminPassword?: string; paymentInstructions?: string }) {
     return this.centersService.update(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @Patch(':id/vip')
+  toggleVip(@Param('id') id: string, @Body() dto: { isVip: boolean }) {
+    return this.centersService.toggleVip(id, dto.isVip);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @Patch(':id/student-limit')
+  setStudentLimit(@Param('id') id: string, @Body() dto: { studentLimit: number }) {
+    return this.centersService.setStudentLimit(id, dto.studentLimit);
   }
 }

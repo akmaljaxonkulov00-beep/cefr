@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Toaster } from 'react-hot-toast';
+import ClientLayout from '@/components/ClientLayout';
 
 export const metadata: Metadata = {
   title: 'MockCEFR - AI Mock Exam Platform',
@@ -15,8 +15,7 @@ export default function RootLayout({
   return (
     <html lang="uz">
       <body className="font-sans antialiased">
-        {children}
-        <Toaster position="top-right" />
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

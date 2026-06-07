@@ -6,13 +6,13 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
-  // Create Super Admin
-  const adminPassword = await bcrypt.hash('admin123', 12);
+  // Create Super Admin with user's specified credentials
+  const adminPassword = await bcrypt.hash('akmal1221', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@mockcefr.uz' },
-    update: {},
+    where: { email: 'akmaljaxonkulov00@gmail.com' },
+    update: { password: adminPassword, role: Role.SUPER_ADMIN },
     create: {
-      email: 'admin@mockcefr.uz',
+      email: 'akmaljaxonkulov00@gmail.com',
       password: adminPassword,
       name: 'Super Admin',
       role: Role.SUPER_ADMIN,
@@ -50,7 +50,7 @@ async function main() {
   const centerAdminPassword = await bcrypt.hash('center123', 12);
   const centerAdmin = await prisma.user.upsert({
     where: { email: 'center@mockcefr.uz' },
-    update: {},
+    update: { centerId: center.id },
     create: {
       email: 'center@mockcefr.uz',
       password: centerAdminPassword,
@@ -104,7 +104,26 @@ async function main() {
     create: { userId: student.id },
   });
 
+  // Create payment card
+  await prisma.paymentCard.upsert({
+    where: { id: 'default-card' },
+    update: {},
+    create: {
+      id: 'default-card',
+      bankName: 'Kapitalbank',
+      cardNumber: '8600 1234 5678 9012',
+      cardHolderName: 'AKMAL JAXONQULOV',
+      cardType: 'UZCARD',
+      isActive: true,
+    },
+  });
+  console.log('Payment Card created');
+
   console.log('Seeding completed successfully!');
+  console.log('\n=== CREDENTIALS ===');
+  console.log('Super Admin: akmaljaxonkulov00@gmail.com / akmal1221');
+  console.log('Center Admin: center@mockcefr.uz / center123');
+  console.log('Student: student@mockcefr.uz / student123');
 }
 
 main()

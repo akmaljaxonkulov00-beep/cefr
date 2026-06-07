@@ -26,7 +26,7 @@ export default function AIWritingPage() {
     if (!essay.trim()) return toast.error('Please write your essay');
     setLoading(true);
     try {
-      const { data } = await api.post('/ai/writing', { essay });
+      const { data } = await api.post('/api/ai/writing', { essay });
       setResult(data);
       toast.success('Analysis complete!');
     } catch {

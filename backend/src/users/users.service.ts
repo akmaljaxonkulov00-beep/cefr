@@ -6,11 +6,29 @@ import { Role } from '@prisma/client';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(role?: string) {
-    const where = role ? { role: role as any } : {};
+  async findAll(role?: string, userId?: string, userRole?: string, centerId?: string) {
+    console.log('[USERS SERVICE] findAll called with:', { role, userId, userRole, centerId });
+    const where: any = {};
+    
+    // Filter by role if specified
+    if (role) {
+      where.role = role as any;
+    }
+    
+    // Center admin can only see users from their center
+    if (userRole === 'CENTER_ADMIN' && centerId) {
+      where.centerId = centerId;
+      console.log('[USERS SERVICE] Filtering by centerId:', centerId);
+    }
+    
+    console.log('[USERS SERVICE] Final where clause:', where);
+    
+    // Super admin can see all users
+    // Student shouldn't access this endpoint (guarded by RolesGuard)
+    
     return this.prisma.user.findMany({
       where,
-      select: { id: true, email: true, name: true, role: true, avatar: true, xp: true, streak: true, createdAt: true },
+      select: { id: true, email: true, name: true, role: true, avatar: true, xp: true, streak: true, createdAt: true, centerId: true },
       orderBy: { createdAt: 'desc' },
     });
   }
