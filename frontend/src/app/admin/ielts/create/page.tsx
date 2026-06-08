@@ -728,10 +728,10 @@ export default function CreateIeltsPage() {
                     ✍️ Qo'lda kiritish
                   </button>
                   <button
-                    onClick={() => toast('Fayl yuklash tez orada qo\'shiladi')}
+                    onClick={() => setWriting({ ...writing, uploadMode: 'file' })}
                     className={`px-4 py-2 rounded-lg transition ${writing.uploadMode === 'file' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                   >
-                    📄 Fayl yuklash (Tez orada)
+                    📄 Fayl yuklash
                   </button>
                 </div>
                 
@@ -804,10 +804,10 @@ export default function CreateIeltsPage() {
                     ✍️ Qo'lda kiritish
                   </button>
                   <button
-                    onClick={() => toast('Fayl yuklash tez orada qo\'shiladi')}
+                    onClick={() => setSpeaking({ ...speaking, uploadMode: 'file' })}
                     className={`px-4 py-2 rounded-lg transition ${speaking.uploadMode === 'file' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                   >
-                    📄 Fayl yuklash (Tez orada)
+                    📄 Fayl yuklash
                   </button>
                 </div>
                 

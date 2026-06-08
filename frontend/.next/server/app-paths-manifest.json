@@ -1,11 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/student/dashboard/page": "app/student/dashboard/page.js",
-  "/student/ielts/page": "app/student/ielts/page.js",
-  "/ielts/page": "app/ielts/page.js",
-  "/register/page": "app/register/page.js",
-  "/ai-speaking/page": "app/ai-speaking/page.js",
-  "/ai-writing/page": "app/ai-writing/page.js",
-  "/login/page": "app/login/page.js",
-  "/admin/pricing/page": "app/admin/pricing/page.js"
+  "/admin/cefr/create/page": "app/admin/cefr/create/page.js",
+  "/admin/ielts/page": "app/admin/ielts/page.js",
+  "/admin/ielts/create/page": "app/admin/ielts/create/page.js",
+  "/admin/mocks/page": "app/admin/mocks/page.js",
+  "/admin/mocks/create/page": "app/admin/mocks/create/page.js"
 }
