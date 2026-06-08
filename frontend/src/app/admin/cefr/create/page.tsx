@@ -15,6 +15,9 @@ export default function CreateCefrPage() {
   const [mockId, setMockId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'listening' | 'reading' | 'writing' | 'speaking'>('listening');
   const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [usePdfUpload, setUsePdfUpload] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [parsedPdfData, setParsedPdfData] = useState<any>(null);
 
   const [basicInfo, setBasicInfo] = useState({
     title: '',
@@ -292,6 +295,45 @@ export default function CreateCefrPage() {
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-white mb-6">Asosiy ma'lumotlar</h2>
+                
+                <div className="bg-white/5 rounded-xl p-6 space-y-4">
+                  <label className="block text-gray-300 mb-2">PDF fayl yuklash</label>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setPdfFile(file);
+                            const result = await handleFileUpload(file, 'pdf');
+                            if (result?.success) {
+                              setParsedPdfData(result.data);
+                              toast.success('PDF muvaffaqiyatli parse qilindi');
+                            }
+                          }
+                        }}
+                        className="w-full bg-white/10 border border-gray-700 rounded-xl px-4 py-3 text-white"
+                      />
+                    </div>
+                    {parsedPdfData && (
+                      <button
+                        onClick={() => {
+                          if (parsedPdfData) {
+                            setBasicInfo({ ...basicInfo, title: parsedPdfData.title || basicInfo.title });
+                            toast.success('PDF ma\'lumotlari qo\'llandi');
+                          }
+                        }}
+                        className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition"
+                      >
+                        Ma'lumotlarni qo'llash
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda ma'lumotlarni ajratib oladi.</p>
+                </div>
+
                 <div>
                   <label className="block text-gray-300 mb-2">Mock nomi</label>
                   <input

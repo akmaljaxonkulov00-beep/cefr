@@ -22,7 +22,7 @@ export default function NotificationsPage() {
 
   const load = () => {
     api
-      .get('/notifications')
+      .get('/api/notifications')
       .then(({ data }) => setItems(data))
       .catch(() => toast.error('Could not load notifications'))
       .finally(() => setLoading(false));
@@ -43,7 +43,7 @@ export default function NotificationsPage() {
 
   const markAll = async () => {
     try {
-      await api.patch('/notifications/read-all');
+      await api.patch('/api/notifications/read-all');
       setItems((prev) => prev.map((n) => ({ ...n, read: true })));
       toast.success('All marked read');
     } catch {

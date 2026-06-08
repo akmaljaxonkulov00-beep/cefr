@@ -49,7 +49,7 @@ export default function CreateMockPage() {
 
   const fetchMock = async (id: string) => {
     try {
-      const { data } = await api.get(`/mocks/${id}`);
+      const { data } = await api.get(`/api/mocks/${id}`);
       setFormData({
         title: data.title,
         type: data.type.includes('IELTS') ? 'IELTS' : 'CEFR',
@@ -398,7 +398,7 @@ function ListeningSection({ type, listeningData, setListeningData }: any) {
     formData.append('file', file);
 
     try {
-      const { data } = await api.post('/api/upload/audio', formData, {
+      const { data } = await api.post('/api/ielts/upload/audio', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setListeningData({
@@ -479,7 +479,7 @@ function ReadingSection({ type, readingData, setReadingData }: any) {
     formData.append('file', file);
 
     try {
-      const { data } = await api.post('/api/upload/file', formData, {
+      const { data } = await api.post('/api/ielts/upload/file', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setReadingData({
