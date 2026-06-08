@@ -346,7 +346,7 @@ export default function CreateIeltsPage() {
 
                 {basicInfo.uploadMode === 'pdf' && (
                   <div className="bg-white/5 rounded-xl p-6 space-y-4">
-                    <label className="block text-gray-300 mb-2">PDF fayl yuklash</label>
+                    <label className="block text-gray-300 mb-2">PDF fayl yuklash (faqat matn, audio alohida)</label>
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <input
@@ -356,31 +356,22 @@ export default function CreateIeltsPage() {
                             const file = e.target.files?.[0];
                             if (file) {
                               setPdfFile(file);
-                              const result = await handleFileUpload(file, 'pdf');
-                              if (result?.success) {
-                                setParsedPdfData(result.data);
-                                toast.success('PDF muvaffaqiyatli parse qilindi');
-                              }
                             }
                           }}
                           className="w-full bg-white/10 border border-gray-700 rounded-xl px-4 py-3 text-white"
                         />
                       </div>
-                      {parsedPdfData && (
+                      {pdfFile && (
                         <button
-                          onClick={() => {
-                            if (parsedPdfData) {
-                              setBasicInfo({ ...basicInfo, title: parsedPdfData.title || basicInfo.title });
-                              toast.success('PDF ma\'lumotlari qo\'llandi');
-                            }
-                          }}
-                          className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition"
+                          onClick={handlePdfUpload}
+                          disabled={loading}
+                          className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
                         >
-                          Ma'lumotlarni qo'llash
+                          {loading ? 'Yuklanmoqda...' : 'PDF yuklash'}
                         </button>
                       )}
                     </div>
-                    <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda ma'lumotlarni ajratib oladi.</p>
+                    <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda Listening, Reading, Writing va Speaking sectionlarini to'ldiradi. Audio fayllarini alohida yuklang.</p>
                   </div>
                 )}
 

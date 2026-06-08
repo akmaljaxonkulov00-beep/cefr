@@ -126,13 +126,24 @@ export class CefrController {
   }
 
   @Post('upload/file')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/reading',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `reading-${uniqueSuffix}${extname(file.originalname)}`);
+      }
+    }),
+    limits: { fileSize: 20 * 1024 * 1024 }
+  }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new Error('No file uploaded');
     }
+    const fs = require('fs');
+    const dataBuffer = fs.readFileSync(file.path);
     const { storageKey, publicUrl, extractedText } = await this.storageService.saveReadingFile(
-      file.buffer,
+      dataBuffer,
       file.mimetype,
       file.originalname,
     );
@@ -185,40 +196,11 @@ export class CefrController {
       const parsed = await this.cefrService.parsePdfMock(file.path);
       return { success: true, filename: file.filename, parsed };
     } catch (error: any) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.message,
         parsed: this.cefrService.getDefaultStructure()
       };
     }
-  }
-
-  @Post('upload/audio')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/audio',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `cefr-audio-${uniqueSuffix}${extname(file.originalname)}`);
-      }
-    }),
-    limits: { fileSize: 200 * 1024 * 1024 } // 200MB
-  }))
-  async uploadCefrAudio(@UploadedFile() file: Express.Multer.File) {
-    return { url: `http://localhost:4000/uploads/audio/${file.filename}` };
-  }
-
-  @Post('upload/image')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/images',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `cefr-img-${uniqueSuffix}${extname(file.originalname)}`);
-      }
-    })
-  }))
-  async uploadCefrImage(@UploadedFile() file: Express.Multer.File) {
-    return { url: `http://localhost:4000/uploads/images/${file.filename}` };
   }
 }

@@ -71,7 +71,7 @@ export default function ExamDetail() {
       pushIntegrity(eventType, detail);
       if (!id) return;
       try {
-        await api.post(`/api/exams/${id}/proctor`, { eventType, detail });
+        await api.post(`/api/exams/session/${id}/proctor`, { eventType, detail });
       } catch {
         /* ignore */
       }

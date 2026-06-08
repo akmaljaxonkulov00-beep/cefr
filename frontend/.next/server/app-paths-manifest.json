@@ -1,7 +1,8 @@
 {
-  "/admin/ielts/create/page": "app/admin/ielts/create/page.js",
-  "/exams/page": "app/exams/page.js",
-  "/exams/[id]/page": "app/exams/[id]/page.js",
-  "/student/dashboard/page": "app/student/dashboard/page.js",
-  "/login/page": "app/login/page.js"
+  "/login/page": "app/login/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/dashboard/profile/page": "app/dashboard/profile/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/mocks/page": "app/admin/mocks/page.js",
+  "/admin/pricing/page": "app/admin/pricing/page.js"
 }
