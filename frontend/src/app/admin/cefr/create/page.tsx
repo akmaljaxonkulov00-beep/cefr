@@ -102,7 +102,7 @@ export default function CreateCefrPage() {
     formData.append('file', file);
 
     try {
-      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : type === 'pdf' ? '/api/ielts/upload/pdf' : '/api/cefr/upload/image';
+      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : type === 'pdf' ? '/api/cefr/upload/pdf' : '/api/cefr/upload/image';
       const { data } = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -282,10 +282,10 @@ export default function CreateCefrPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex">
+    <div className="min-h-screen bg-[#0f172a] flex flex-col lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 p-4 lg:p-8">
+        <div className="max-w-6xl mx-auto w-full">
           {/* Draft Banner */}
           {showDraftBanner && (
             <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-between">
@@ -311,22 +311,22 @@ export default function CreateCefrPage() {
           )}
 
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-3 lg:gap-4 mb-6 lg:mb-8">
             <button onClick={handleBack} className="p-2 bg-white/5 text-white rounded-lg hover:bg-white/10 transition">
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Yangi CEFR Mock</h1>
-              <p className="text-gray-400">4 qadamda CEFR mock yaratish</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">Yangi CEFR Mock</h1>
+              <p className="text-gray-400 text-sm lg:text-base">4 qadamda CEFR mock yaratish</p>
             </div>
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 lg:mb-8 gap-1 lg:gap-2">
             {[1, 2, 3, 4].map((s) => (
               <div key={s} className="flex-1 flex items-center">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition ${
+                  className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center font-semibold text-sm lg:text-base transition ${
                     step >= s
                       ? 'gradient-bg text-white'
                       : 'bg-white/5 text-gray-500'
@@ -336,7 +336,7 @@ export default function CreateCefrPage() {
                 </div>
                 {s < 4 && (
                   <div
-                    className={`flex-1 h-1 mx-2 transition ${
+                    className={`flex-1 h-0.5 lg:h-1 mx-1 lg:mx-2 transition ${
                       step > s ? 'gradient-bg' : 'bg-white/5'
                     }`}
                   />
@@ -346,14 +346,14 @@ export default function CreateCefrPage() {
           </div>
 
           {/* Step Content */}
-          <div className="glass-dark rounded-2xl p-8">
+          <div className="glass-dark rounded-2xl p-4 lg:p-8">
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-white mb-6">Asosiy ma'lumotlar</h2>
                 
-                <div className="bg-white/5 rounded-xl p-6 space-y-4">
-                  <label className="block text-gray-300 mb-2">PDF fayl yuklash (4 ta section avtomatik to'ldiriladi)</label>
-                  <div className="flex gap-4">
+                <div className="bg-white/5 rounded-xl p-4 lg:p-6 space-y-4">
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">PDF fayl yuklash (4 ta section avtomatik to'ldiriladi)</label>
+                  <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
                     <div className="flex-1">
                       <input
                         type="file"
@@ -364,38 +364,38 @@ export default function CreateCefrPage() {
                             setPdfFile(file);
                           }
                         }}
-                        className="w-full bg-white/10 border border-gray-700 rounded-xl px-4 py-3 text-white"
+                        className="w-full bg-white/10 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white text-sm"
                       />
                     </div>
                     {pdfFile && (
                       <button
                         onClick={handlePdfUpload}
                         disabled={loading}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+                        className="px-4 lg:px-6 py-2 lg:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 text-sm lg:text-base"
                       >
                         {loading ? 'Yuklanmoqda...' : 'PDF yuklash'}
                       </button>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda Listening, Reading, Writing va Speaking sectionlarini to'ldiradi.</p>
+                  <p className="text-gray-400 text-xs lg:text-sm">PDF faylini yuklang, tizim avtomatik ravishda Listening, Reading, Writing va Speaking sectionlarini to'ldiradi.</p>
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">Mock nomi</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Mock nomi</label>
                   <input
                     type="text"
                     value={basicInfo.title}
                     onChange={(e) => setBasicInfo({ ...basicInfo, title: e.target.value })}
-                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white focus:outline-none focus:border-primary-500 transition text-sm lg:text-base"
                     placeholder="CEFR Mock Test 1"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Daraja</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Daraja</label>
                   <select
                     value={basicInfo.level}
                     onChange={(e) => setBasicInfo({ ...basicInfo, level: e.target.value as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' })}
-                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white focus:outline-none focus:border-primary-500 transition text-sm lg:text-base"
                   >
                     <option value="A1">A1</option>
                     <option value="A2">A2</option>
@@ -406,58 +406,58 @@ export default function CreateCefrPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Davomiylik (daqiqa)</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Davomiylik (daqiqa)</label>
                   <input
                     type="number"
                     value={basicInfo.duration}
                     onChange={(e) => setBasicInfo({ ...basicInfo, duration: parseInt(e.target.value) || 180 })}
-                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white focus:outline-none focus:border-primary-500 transition text-sm lg:text-base"
                     placeholder="180"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Tavsif</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Tavsif</label>
                   <textarea
                     value={basicInfo.description}
                     onChange={(e) => setBasicInfo({ ...basicInfo, description: e.target.value })}
-                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
+                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white focus:outline-none focus:border-primary-500 transition h-24 lg:h-32 text-sm lg:text-base"
                     placeholder="Mock haqida qisqacha ma'lumot..."
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Narxi (UZS)</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Narxi (UZS)</label>
                   <input
                     type="number"
                     value={basicInfo.price}
                     onChange={(e) => setBasicInfo({ ...basicInfo, price: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+                    className="w-full bg-white/5 border border-gray-700 rounded-xl px-3 lg:px-4 py-2 lg:py-3 text-white focus:outline-none focus:border-primary-500 transition text-sm lg:text-base"
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Pullami?</label>
+                  <label className="block text-gray-300 mb-2 text-sm lg:text-base">Pullami?</label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={basicInfo.isPaid}
                       onChange={(e) => setBasicInfo({ ...basicInfo, isPaid: e.target.checked })}
-                      className="w-5 h-5 rounded"
+                      className="w-4 h-4 lg:w-5 lg:h-5 rounded"
                     />
-                    <span className="text-gray-300">Ha, bu mock pullik</span>
+                    <span className="text-gray-300 text-sm lg:text-base">Ha, bu mock pullik</span>
                   </label>
                 </div>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white mb-6">Bo'limlar</h2>
+              <div className="space-y-4 lg:space-y-6">
+                <h2 className="text-xl lg:text-2xl font-bold text-white mb-4 lg:mb-6">Bo'limlar</h2>
                 
                 {/* Tabs */}
-                <div className="flex gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-4 lg:mb-6">
                   <button
                     onClick={() => setActiveTab('listening')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
+                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm lg:text-base transition ${
                       activeTab === 'listening'
                         ? 'gradient-bg text-white'
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -467,7 +467,7 @@ export default function CreateCefrPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('reading')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
+                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm lg:text-base transition ${
                       activeTab === 'reading'
                         ? 'gradient-bg text-white'
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -477,7 +477,7 @@ export default function CreateCefrPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('writing')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
+                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm lg:text-base transition ${
                       activeTab === 'writing'
                         ? 'gradient-bg text-white'
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -487,7 +487,7 @@ export default function CreateCefrPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('speaking')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
+                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm lg:text-base transition ${
                       activeTab === 'speaking'
                         ? 'gradient-bg text-white'
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -978,22 +978,22 @@ export default function CreateCefrPage() {
             )}
 
             {/* Navigation */}
-            <div className="flex justify-between mt-8 pt-6 border-t border-gray-800">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-gray-800">
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white rounded-xl font-semibold hover:bg-white/10 transition"
+                className="flex items-center justify-center gap-2 px-4 lg:px-6 py-2 lg:py-3 bg-white/5 text-white rounded-xl font-semibold hover:bg-white/10 transition text-sm lg:text-base"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={16} />
                 Orqaga
               </button>
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-4 lg:px-6 py-2 lg:py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50 text-sm lg:text-base"
               >
                 {loading ? 'Saqlanmoqda...' : step === 4 ? 'Nashr qilish' : 'Keyingi'}
-                {step < 4 && <ArrowRight size={20} />}
-                {step === 4 && <Save size={20} />}
+                {step < 4 && <ArrowRight size={16} />}
+                {step === 4 && <Save size={16} />}
               </button>
             </div>
           </div>
