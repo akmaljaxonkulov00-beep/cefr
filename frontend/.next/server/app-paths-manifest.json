@@ -1,8 +1,10 @@
 {
-  "/login/page": "app/login/page.js",
-  "/admin/users/page": "app/admin/users/page.js",
-  "/dashboard/profile/page": "app/dashboard/profile/page.js",
   "/admin/page": "app/admin/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/login/page": "app/login/page.js",
+  "/register/page": "app/register/page.js",
+  "/page": "app/page.js",
+  "/student/dashboard/page": "app/student/dashboard/page.js",
   "/admin/mocks/page": "app/admin/mocks/page.js",
-  "/admin/pricing/page": "app/admin/pricing/page.js"
+  "/ai-speaking/page": "app/ai-speaking/page.js"
 }
