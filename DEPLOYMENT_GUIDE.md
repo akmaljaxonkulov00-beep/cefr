@@ -63,7 +63,7 @@ GROQ_API_KEY=gsk_test_placeholder
 SUPABASE_URL=https://diasmyffedauhqepoxbz.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MzczNjcsImV4cCI6MjA5NjQxMzM2N30.5x0dQBOjvUGkPOouDfdmlBTlXkeJRbNoQdjKOQ3o_vw
 SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYXNteWZmZWRhdWhxZXBveGJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDgzNzM2NywiZXhwIjoyMDk2NDEzMzY3fQ.InhZA1tN4MCNhBeHuf8zfFfjqT1r4eQ2oTgTV-0DTbA
-FRONTEND_URL=https://your-frontend.vercel.app
+FRONTEND_URL=https://cefr-six.vercel.app
 PORT=4000
 ```
 
@@ -89,7 +89,7 @@ PORT=4000
 In Vercel project settings → Environment Variables, add:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+NEXT_PUBLIC_API_URL=https://cefr-production-e7c9.up.railway.app
 ```
 
 **Note**: After deploying backend, replace `your-backend.railway.app` with actual Railway URL.
@@ -138,13 +138,13 @@ GROQ_API_KEY=your-groq-api-key
 SUPABASE_URL=https://[ref].supabase.co
 SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_KEY=your-supabase-service-key
-FRONTEND_URL=https://your-frontend.vercel.app
+FRONTEND_URL=https://cefr-six.vercel.app
 PORT=3000
 ```
 
 ### Frontend (.env)
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+NEXT_PUBLIC_API_URL=https://cefr-production-e7c9.up.railway.app
 ```
 
 ## Troubleshooting
