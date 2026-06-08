@@ -55,6 +55,10 @@ export default function LoginPage() {
       setToken(token);
       setUser(data.user);
       
+      // Also save to localStorage for API interceptor
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
       toast.success('Muvaffaqiyatli kirildi!');
       
       const role = data.user.role;

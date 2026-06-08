@@ -27,7 +27,7 @@ export default function StudentDashboard() {
         const [analyticsRes] = await Promise.allSettled([
           api.get('/api/analytics/my'),
         ])
-        
+
         if (analyticsRes.status === 'fulfilled') {
           setStats(analyticsRes.value.data)
         }

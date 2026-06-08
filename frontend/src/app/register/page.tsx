@@ -95,6 +95,10 @@ export default function RegisterPage() {
       setToken(token);
       setUser(data.user);
       
+      // Also save to localStorage for API interceptor
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
       toast.success('Hisob muvaffaqiyatli yaratildi!');
       
       const role = data.user.role;
