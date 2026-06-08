@@ -69,10 +69,10 @@ export default function CreateIeltsPage() {
     formData.append('file', file);
 
     try {
-      const endpoint = type === 'audio' ? '/ielts/upload/audio' : 
-                       type === 'file' ? '/ielts/upload/file' : 
-                       type === 'image' ? '/ielts/upload/image' : 
-                       '/ielts/upload/pdf';
+      const endpoint = type === 'audio' ? '/api/ielts/upload/audio' :
+                       type === 'file' ? '/api/ielts/upload/file' :
+                       type === 'image' ? '/api/ielts/upload/image' :
+                       '/api/ielts/upload/pdf';
       const { data } = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -96,7 +96,7 @@ export default function CreateIeltsPage() {
 
   const createMock = async () => {
     try {
-      const { data } = await api.post('/ielts/mocks', basicInfo);
+      const { data } = await api.post('/api/ielts/mocks', basicInfo);
       setMockId(data.id);
       return data.id;
     } catch (error) {
@@ -108,7 +108,7 @@ export default function CreateIeltsPage() {
   const saveListening = async () => {
     if (!mockId) return;
     try {
-      await api.post(`/ielts/mocks/${mockId}/listening`, listening);
+      await api.post(`/api/ielts/mocks/${mockId}/listening`, listening);
       toast.success('Listening saqlandi');
     } catch (error) {
       toast.error('Listening saqlanmadi');
@@ -118,7 +118,7 @@ export default function CreateIeltsPage() {
   const saveReading = async () => {
     if (!mockId) return;
     try {
-      await api.post(`/ielts/mocks/${mockId}/reading`, reading);
+      await api.post(`/api/ielts/mocks/${mockId}/reading`, reading);
       toast.success('Reading saqlandi');
     } catch (error) {
       toast.error('Reading saqlanmadi');
@@ -128,7 +128,7 @@ export default function CreateIeltsPage() {
   const saveWriting = async () => {
     if (!mockId) return;
     try {
-      await api.post(`/ielts/mocks/${mockId}/writing`, writing);
+      await api.post(`/api/ielts/mocks/${mockId}/writing`, writing);
       toast.success('Writing saqlandi');
     } catch (error) {
       toast.error('Writing saqlanmadi');
@@ -138,7 +138,7 @@ export default function CreateIeltsPage() {
   const saveSpeaking = async () => {
     if (!mockId) return;
     try {
-      await api.post(`/ielts/mocks/${mockId}/speaking`, speaking);
+      await api.post(`/api/ielts/mocks/${mockId}/speaking`, speaking);
       toast.success('Speaking saqlandi');
     } catch (error) {
       toast.error('Speaking saqlanmadi');
