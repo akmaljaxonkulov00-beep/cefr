@@ -68,7 +68,7 @@ export default function CenterAdminDashboard() {
 
   const updateExamPrice = async (examId: string, newPrice: number) => {
     try {
-      await api.patch(`/exams/${examId}/price`, { priceUzs: newPrice });
+      await api.patch(`/api/exams/${examId}/price`, { priceUzs: newPrice });
       toast.success('Narx yangilandi');
       fetchData();
     } catch (error: any) {

@@ -131,7 +131,7 @@ export default function CenterAdminExams() {
   const deleteExam = async (examId: string) => {
     if (!confirm('Imtihonni o\'chirishni tasdiqlaysizmi?')) return;
     try {
-      await api.delete(`/exams/${examId}`);
+      await api.delete(`/api/exams/${examId}`);
       toast.success('Imtihon o\'chirildi');
       fetchData();
     } catch (error: any) {

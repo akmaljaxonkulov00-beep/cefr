@@ -71,7 +71,7 @@ export default function ExamDetail() {
       pushIntegrity(eventType, detail);
       if (!id) return;
       try {
-        await api.post(`/exams/${id}/proctor`, { eventType, detail });
+        await api.post(`/api/exams/${id}/proctor`, { eventType, detail });
       } catch {
         /* ignore */
       }
@@ -133,7 +133,7 @@ export default function ExamDetail() {
   useEffect(() => {
     if (!id) return;
     api
-      .get(`/exams/${id}`)
+      .get(`/api/exams/${id}`)
       .then(({ data }) => {
         setExam(data.exam);
         setAccess(data.access);
@@ -163,7 +163,7 @@ export default function ExamDetail() {
     const integrityReport = { events: integrityEventsRef.current };
 
     try {
-      const { data } = await api.post(`/exams/${id}/submit`, {
+      const { data } = await api.post(`/api/exams/${id}/submit`, {
         answers,
         score: percentage,
         integrityScore,

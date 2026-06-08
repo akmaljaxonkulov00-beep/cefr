@@ -40,7 +40,7 @@ export default function CreateCefrPage() {
 
   const [writing, setWriting] = useState({
     duration: 80,
-    task11: { type: 'message', context: '', instruction: '', minWords: 40, maxWords: 60 },
+    task11: { type: 'message', context: '', instruction: '', minWords: 40, maxWords: 60, imageUrl: '' },
     task12: { type: 'email', context: '', instruction: '', points: ['', '', ''], minWords: 100, maxWords: 150 },
     task2: { type: 'essay', prompt: '', minWords: 200, maxWords: 250 },
     aiWeights: { taskResponse: 25, coherence: 25, lexical: 25, grammar: 25 },
@@ -102,7 +102,7 @@ export default function CreateCefrPage() {
     formData.append('file', file);
 
     try {
-      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : type === 'pdf' ? '/api/cefr/upload/pdf' : '/api/cefr/upload/image';
+      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : type === 'pdf' ? '/api/ielts/upload/pdf' : '/api/cefr/upload/image';
       const { data } = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -110,6 +110,61 @@ export default function CreateCefrPage() {
     } catch (error) {
       toast.error('Fayl yuklanmadi');
       return null;
+    }
+  };
+
+  const handlePdfUpload = async () => {
+    if (!pdfFile) return;
+    setLoading(true);
+    const result = await handleFileUpload(pdfFile, 'pdf');
+    setLoading(false);
+    if (result?.success) {
+      setParsedPdfData(result.data);
+      applyParsedData(result.data);
+      toast.success('PDF muvaffaqiyatli parse qilindi va 4 ta section avtomatik to\'ldirildi');
+    }
+  };
+
+  const applyParsedData = (data: any) => {
+    if (data.listening) {
+      setListening({
+        duration: 40,
+        sections: data.listening.sections || [
+          { audioUrl: '', audioPlaysTwice: true, questions: [] },
+          { audioUrl: '', audioPlaysTwice: true, questions: [] },
+          { audioUrl: '', audioPlaysTwice: true, questions: [] },
+          { audioUrl: '', audioPlaysTwice: true, questions: [] },
+        ],
+      });
+    }
+
+    if (data.reading) {
+      setReading({
+        duration: 60,
+        passages: data.reading.passages || [
+          { type: 'matching', content: '', questions: [] },
+          { type: 'multiple_choice', content: '', questions: [] },
+          { type: 'fill_blank', content: '', questions: [] },
+        ],
+      });
+    }
+
+    if (data.writing) {
+      setWriting({
+        duration: 80,
+        task11: data.writing.task1 || { type: 'message', context: '', instruction: '', minWords: 40, maxWords: 60 },
+        task12: data.writing.task12 || { type: 'email', context: '', instruction: '', points: ['', '', ''], minWords: 100, maxWords: 150 },
+        task2: data.writing.task2 || { type: 'essay', prompt: '', minWords: 200, maxWords: 250 },
+        aiWeights: { taskResponse: 25, coherence: 25, lexical: 25, grammar: 25 },
+      });
+    }
+
+    if (data.speaking) {
+      setSpeaking({
+        task1: data.speaking.part1 || { questions: [], duration: 4 },
+        task2: data.speaking.part2 || { images: [], guidingQuestions: [], prepTime: 30, speakTime: 180 },
+        task3: data.speaking.part3 || { topic: '', followUpQuestions: [], duration: 6 },
+      });
     }
   };
 
@@ -297,7 +352,7 @@ export default function CreateCefrPage() {
                 <h2 className="text-2xl font-bold text-white mb-6">Asosiy ma'lumotlar</h2>
                 
                 <div className="bg-white/5 rounded-xl p-6 space-y-4">
-                  <label className="block text-gray-300 mb-2">PDF fayl yuklash</label>
+                  <label className="block text-gray-300 mb-2">PDF fayl yuklash (4 ta section avtomatik to'ldiriladi)</label>
                   <div className="flex gap-4">
                     <div className="flex-1">
                       <input
@@ -307,31 +362,22 @@ export default function CreateCefrPage() {
                           const file = e.target.files?.[0];
                           if (file) {
                             setPdfFile(file);
-                            const result = await handleFileUpload(file, 'pdf');
-                            if (result?.success) {
-                              setParsedPdfData(result.data);
-                              toast.success('PDF muvaffaqiyatli parse qilindi');
-                            }
                           }
                         }}
                         className="w-full bg-white/10 border border-gray-700 rounded-xl px-4 py-3 text-white"
                       />
                     </div>
-                    {parsedPdfData && (
+                    {pdfFile && (
                       <button
-                        onClick={() => {
-                          if (parsedPdfData) {
-                            setBasicInfo({ ...basicInfo, title: parsedPdfData.title || basicInfo.title });
-                            toast.success('PDF ma\'lumotlari qo\'llandi');
-                          }
-                        }}
-                        className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition"
+                        onClick={handlePdfUpload}
+                        disabled={loading}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
                       >
-                        Ma'lumotlarni qo'llash
+                        {loading ? 'Yuklanmoqda...' : 'PDF yuklash'}
                       </button>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda ma'lumotlarni ajratib oladi.</p>
+                  <p className="text-gray-400 text-sm">PDF faylini yuklang, tizim avtomatik ravishda Listening, Reading, Writing va Speaking sectionlarini to'ldiradi.</p>
                 </div>
 
                 <div>
@@ -462,6 +508,30 @@ export default function CreateCefrPage() {
                         className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
                       />
                     </div>
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <label className="block text-gray-300 mb-2">Audio fayl yuklash (alohida)</label>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const result = await handleFileUpload(file, 'audio');
+                            if (result?.url) {
+                              const newSections = [...listening.sections];
+                              if (newSections.length === 0) {
+                                newSections.push({ audioUrl: result.url, audioPlaysTwice: true, questions: [] });
+                              } else {
+                                newSections[0].audioUrl = result.url;
+                              }
+                              setListening({ ...listening, sections: newSections });
+                              toast.success('Audio yuklandi');
+                            }
+                          }
+                        }}
+                        className="w-full bg-white/10 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                    </div>
                     <button
                       onClick={addListeningPart}
                       className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
@@ -523,6 +593,30 @@ export default function CreateCefrPage() {
                         className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
                       />
                     </div>
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <label className="block text-gray-300 mb-2">Matn fayl yuklash (alohida)</label>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const result = await handleFileUpload(file, 'file');
+                            if (result?.url) {
+                              const newPassages = [...reading.passages];
+                              if (newPassages.length === 0) {
+                                newPassages.push({ type: 'matching', content: result.text || '', questions: [] });
+                              } else {
+                                newPassages[0].content = result.text || '';
+                              }
+                              setReading({ ...reading, passages: newPassages });
+                              toast.success('Matn yuklandi');
+                            }
+                          }
+                        }}
+                        className="w-full bg-white/10 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                    </div>
                     <button
                       onClick={addReadingPart}
                       className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
@@ -569,6 +663,25 @@ export default function CreateCefrPage() {
                         value={writing.duration}
                         onChange={(e) => setWriting({ ...writing, duration: parseInt(e.target.value) || 80 })}
                         className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+                      />
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <label className="block text-gray-300 mb-2">Rasm yuklash (alohida)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const result = await handleFileUpload(file, 'image');
+                            if (result?.url) {
+                              setWriting({ ...writing, task11: { ...writing.task11, imageUrl: result.url } });
+                              toast.success('Rasm yuklandi');
+                            }
+                          }
+                        }}
+                        className="w-full bg-white/10 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
                       />
                     </div>
 
@@ -710,6 +823,27 @@ export default function CreateCefrPage() {
 
                     <div className="space-y-4">
                       <h3 className="text-xl font-semibold text-white">Task 2 - Rasm tavsifi</h3>
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <label className="block text-gray-300 mb-2">Rasm yuklash (alohida)</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length > 0) {
+                              const uploadPromises = files.map(file => handleFileUpload(file, 'image'));
+                              const results = await Promise.all(uploadPromises);
+                              const urls = results.filter(r => r?.url).map(r => r.url);
+                              if (urls.length > 0) {
+                                setSpeaking({ ...speaking, task2: { ...speaking.task2, images: urls } });
+                                toast.success(`${urls.length} ta rasm yuklandi`);
+                              }
+                            }
+                          }}
+                          className="w-full bg-white/10 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                        />
+                      </div>
                       <div>
                         <label className="block text-gray-300 mb-2">Tayyorlanish vaqti (sekund)</label>
                         <input

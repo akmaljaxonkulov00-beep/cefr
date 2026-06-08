@@ -1,7 +1,7 @@
 {
-  "/admin/cefr/create/page": "app/admin/cefr/create/page.js",
-  "/admin/ielts/page": "app/admin/ielts/page.js",
   "/admin/ielts/create/page": "app/admin/ielts/create/page.js",
-  "/admin/mocks/page": "app/admin/mocks/page.js",
-  "/admin/mocks/create/page": "app/admin/mocks/create/page.js"
+  "/exams/page": "app/exams/page.js",
+  "/exams/[id]/page": "app/exams/[id]/page.js",
+  "/student/dashboard/page": "app/student/dashboard/page.js",
+  "/login/page": "app/login/page.js"
 }

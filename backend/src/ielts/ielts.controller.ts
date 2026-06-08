@@ -13,7 +13,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
 import { IeltsService } from './ielts.service';
 import { IeltsPdfParserService, ParsedMock } from './pdf-parser.service';
@@ -106,29 +106,27 @@ export class IeltsController {
 
   @Post('upload/audio')
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/audio',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `audio-${uniqueSuffix}${extname(file.originalname)}`);
-      }
-    }),
+    storage: memoryStorage(),
     limits: { fileSize: 200 * 1024 * 1024 } // 200MB
   }))
   async uploadAudio(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
+    if (!file || !file.buffer) {
       throw new Error('Fayl yuklanmadi');
     }
+    const saved = await this.storageService.saveListeningAudio(file.buffer, file.mimetype, file.originalname);
     return {
-      url: `http://localhost:4000/uploads/audio/${file.filename}`,
-      filename: file.filename
+      url: saved.publicUrl,
+      filename: saved.filename
     };
   }
 
   @Post('upload/file')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 }
+  }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
+    if (!file || !file.buffer) {
       throw new Error('No file uploaded');
     }
     const { storageKey, publicUrl, extractedText } = await this.storageService.saveReadingFile(
@@ -161,13 +159,7 @@ export class IeltsController {
 
   @Post('upload/pdf')
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/pdf',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `ielts-${uniqueSuffix}${extname(file.originalname)}`);
-      }
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, cb) => {
       if (file.mimetype === 'application/pdf') {
         cb(null, true);
@@ -178,19 +170,17 @@ export class IeltsController {
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
   }))
   async uploadPdf(@UploadedFile() file: Express.Multer.File): Promise<{ success: boolean; data: ParsedMock; fileName: string }> {
-    if (!file) {
+    if (!file || !file.buffer) {
       throw new Error('Fayl yuklanmadi');
     }
-    
+
     try {
-      const fs = require('fs');
-      const dataBuffer = fs.readFileSync(file.path);
-      const parsedData = await this.pdfParserService.parseIeltsMock(dataBuffer);
-      
+      const parsedData = await this.pdfParserService.parseIeltsMock(file.buffer);
+
       return {
         success: true,
         data: parsedData,
-        fileName: file.filename,
+        fileName: file.originalname,
       };
     } catch (error: any) {
       console.error('PDF upload error:', error);

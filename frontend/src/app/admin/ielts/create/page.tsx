@@ -90,7 +90,55 @@ export default function CreateIeltsPage() {
     setLoading(false);
     if (result?.success) {
       setParsedPdfData(result.data);
-      toast.success('PDF muvaffaqiyatli parse qilindi');
+      applyParsedData(result.data);
+      toast.success('PDF muvaffaqiyatli parse qilindi va 4 ta section avtomatik to\'ldirildi');
+    }
+  };
+
+  const applyParsedData = (data: any) => {
+    if (data.listening) {
+      setListening({
+        duration: 40,
+        audioUrl: '',
+        useSingleAudio: true,
+        audioUploadMode: 'single',
+        sections: data.listening.sections || [
+          { sectionNumber: 1, audioUrl: '', audioStart: 0, audioEnd: 0, title: 'Section 1', instructions: '', questionType: 'fill_blank', maxWords: 2, questions: [] },
+          { sectionNumber: 2, audioUrl: '', audioStart: 0, audioEnd: 0, title: 'Section 2', instructions: '', questionType: 'multiple_choice', maxWords: 0, questions: [] },
+          { sectionNumber: 3, audioUrl: '', audioStart: 0, audioEnd: 0, title: 'Section 3', instructions: '', questionType: 'multiple_choice', maxWords: 0, questions: [] },
+          { sectionNumber: 4, audioUrl: '', audioStart: 0, audioEnd: 0, title: 'Section 4', instructions: '', questionType: 'fill_blank', maxWords: 1, questions: [] },
+        ],
+      });
+    }
+
+    if (data.reading) {
+      setReading({
+        duration: 60,
+        passages: data.reading.passages || [
+          { passageNumber: 1, title: '', text: '', sections: ['A', 'B', 'C', 'D', 'E', 'F', 'G'], parts: [] },
+          { passageNumber: 2, title: '', text: '', sections: [], parts: [] },
+          { passageNumber: 3, title: '', text: '', sections: [], parts: [] },
+        ],
+      });
+    }
+
+    if (data.writing) {
+      setWriting({
+        duration: 60,
+        uploadMode: 'manual',
+        task1: data.writing.task1 || { instructions: '', imageUrl: '', tableData: null, minWords: 150, timeRecommended: 20 },
+        task2: data.writing.task2 || { instructions: '', type: 'agree_disagree', minWords: 250, timeRecommended: 40 },
+      });
+    }
+
+    if (data.speaking) {
+      setSpeaking({
+        duration: 15,
+        uploadMode: 'manual',
+        part1: data.speaking.part1 || { topic: '', questions: [] },
+        part2: data.speaking.part2 || { cueCard: '', bulletPoints: [], prepTime: 60, speakTime: 120 },
+        part3: data.speaking.part3 || { topic: '', questions: [] },
+      });
     }
   };
 
