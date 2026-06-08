@@ -94,12 +94,12 @@ export default function CreateCefrPage() {
     setShowDraftBanner(false);
   };
 
-  const handleFileUpload = async (file: File, type: 'audio' | 'file' | 'image') => {
+  const handleFileUpload = async (file: File, type: 'audio' | 'file' | 'image' | 'pdf') => {
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : '/api/cefr/upload/image';
+      const endpoint = type === 'audio' ? '/api/cefr/upload/audio' : type === 'file' ? '/api/cefr/upload/file' : type === 'pdf' ? '/api/cefr/upload/pdf' : '/api/cefr/upload/image';
       const { data } = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

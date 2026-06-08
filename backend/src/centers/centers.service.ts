@@ -119,11 +119,4 @@ export class CentersService {
       data: { isVip },
     });
   }
-
-  async setStudentLimit(id: string, studentLimit: number) {
-    return this.prisma.center.update({
-      where: { id },
-      data: { studentLimit },
-    });
-  }
 }

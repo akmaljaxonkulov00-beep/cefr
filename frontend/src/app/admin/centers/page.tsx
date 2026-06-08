@@ -13,7 +13,7 @@ export default function AdminCenters() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingCenter, setEditingCenter] = useState<any>(null);
-  const [newCenter, setNewCenter] = useState({ name: '', address: '', phone: '', mockLimit: 100, studentLimit: 100, isVip: false });
+  const [newCenter, setNewCenter] = useState({ name: '', address: '', phone: '', mockLimit: 100, isVip: false });
 
   useEffect(() => {
     fetchCenters();
@@ -54,13 +54,12 @@ export default function AdminCenters() {
         address: newCenter.address,
         phone: newCenter.phone,
         mockLimit: newCenter.mockLimit,
-        studentLimit: newCenter.studentLimit,
         isVip: newCenter.isVip,
         adminEmail,
         adminPassword
       });
       toast.success('Markaz yaratildi. Admin login: ' + adminEmail + ', Parol: ' + adminPassword);
-      setNewCenter({ name: '', address: '', phone: '', mockLimit: 100, studentLimit: 100, isVip: false });
+      setNewCenter({ name: '', address: '', phone: '', mockLimit: 100, isVip: false });
       setShowAdd(false);
       fetchCenters();
     } catch (error: any) {
@@ -71,7 +70,7 @@ export default function AdminCenters() {
   const handleDelete = async (id: string) => {
     if (!confirm('Markazni o\'chirishni tasdiqlaysizmi?')) return;
     try {
-      await api.delete(`/centers/${id}`);
+      await api.delete(`/api/centers/${id}`);
       toast.success('Markaz o\'chirildi');
       fetchCenters();
     } catch (error: any) {
@@ -99,15 +98,6 @@ export default function AdminCenters() {
     }
   };
 
-  const handleSetStudentLimit = async (id: string, studentLimit: number) => {
-    try {
-      await api.patch(`/api/centers/${id}/student-limit`, { studentLimit });
-      toast.success('O\'quvchi limiti yangilandi');
-      fetchCenters();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Xato');
-    }
-  };
 
   const handleEdit = (center: any) => {
     setEditingCenter(center);
@@ -118,7 +108,7 @@ export default function AdminCenters() {
     e.preventDefault();
     if (!editingCenter) return;
     try {
-      await api.patch(`/centers/${editingCenter.id}`, {
+      await api.patch(`/api/centers/${editingCenter.id}`, {
         name: editingCenter.name,
         address: editingCenter.address,
         phone: editingCenter.phone,
@@ -139,7 +129,7 @@ export default function AdminCenters() {
     if (!confirm('Yangi parol generatsiya qilinsinmi?')) return;
     try {
       const newPassword = generatePassword();
-      await api.patch(`/centers/${id}`, { adminPassword: newPassword });
+      await api.patch(`/api/centers/${id}`, { adminPassword: newPassword });
       toast.success('Yangi parol: ' + newPassword);
       fetchCenters();
     } catch (error: any) {
@@ -225,30 +215,6 @@ export default function AdminCenters() {
                         type="number"
                         value={newCenter.mockLimit ?? ''}
                         onChange={(e) => setNewCenter({ ...newCenter, mockLimit: e.target.value ? parseInt(e.target.value) : 100 })}
-                        className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                        min={0}
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">O'quvchi Limiti</label>
-                    <div className="flex items-center gap-3 mb-2">
-                      <input
-                        type="checkbox"
-                        id="unlimited-students-new"
-                        checked={newCenter.studentLimit === -1}
-                        onChange={(e) => {
-                          setNewCenter({ ...newCenter, studentLimit: e.target.checked ? -1 : 100 });
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <label htmlFor="unlimited-students-new" className="text-white text-sm">Cheksiz</label>
-                    </div>
-                    {newCenter.studentLimit !== -1 && (
-                      <input
-                        type="number"
-                        value={newCenter.studentLimit ?? ''}
-                        onChange={(e) => setNewCenter({ ...newCenter, studentLimit: e.target.value ? parseInt(e.target.value) : 100 })}
                         className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-2 text-white"
                         min={0}
                       />
@@ -390,7 +356,6 @@ export default function AdminCenters() {
                         <th className="text-left p-3 text-gray-400">Admin Parol</th>
                         <th className="text-left p-3 text-gray-400">O'quvchilar</th>
                         <th className="text-left p-3 text-gray-400">Mock Limit</th>
-                        <th className="text-left p-3 text-gray-400">O'quvchi Limit</th>
                         <th className="text-left p-3 text-gray-400">Status</th>
                         <th className="text-left p-3 text-gray-400">Aksiya</th>
                       </tr>
@@ -427,14 +392,6 @@ export default function AdminCenters() {
                               type="number"
                               defaultValue={center.mockLimit || 100}
                               onBlur={(e) => handleUpdateLimit(center.id, parseInt(e.target.value))}
-                              className="w-20 bg-white/5 border border-gray-700 rounded px-2 py-1 text-white"
-                            />
-                          </td>
-                          <td className="p-3 text-gray-300">
-                            <input
-                              type="number"
-                              defaultValue={center.studentLimit || 100}
-                              onBlur={(e) => handleSetStudentLimit(center.id, parseInt(e.target.value))}
                               className="w-20 bg-white/5 border border-gray-700 rounded px-2 py-1 text-white"
                             />
                           </td>

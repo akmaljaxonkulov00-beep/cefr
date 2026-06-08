@@ -51,12 +51,14 @@ export default function CreateIeltsPage() {
 
   const [writing, setWriting] = useState({
     duration: 60,
+    uploadMode: 'manual' as 'manual' | 'file',
     task1: { instructions: '', imageUrl: '', tableData: null, minWords: 150, timeRecommended: 20 },
     task2: { instructions: '', type: 'agree_disagree', minWords: 250, timeRecommended: 40 },
   });
 
   const [speaking, setSpeaking] = useState({
     duration: 15,
+    uploadMode: 'manual' as 'manual' | 'file',
     part1: { topic: '', questions: [] as string[] },
     part2: { cueCard: '', bulletPoints: [] as string[], prepTime: 60, speakTime: 120 },
     part3: { topic: '', questions: [] as string[] },
@@ -67,10 +69,10 @@ export default function CreateIeltsPage() {
     formData.append('file', file);
 
     try {
-      const endpoint = type === 'audio' ? '/api/ielts/upload/audio' : 
-                       type === 'file' ? '/api/ielts/upload/file' : 
-                       type === 'image' ? '/api/ielts/upload/image' : 
-                       '/api/ielts/upload/pdf';
+      const endpoint = type === 'audio' ? '/ielts/upload/audio' : 
+                       type === 'file' ? '/ielts/upload/file' : 
+                       type === 'image' ? '/ielts/upload/image' : 
+                       '/ielts/upload/pdf';
       const { data } = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -94,7 +96,7 @@ export default function CreateIeltsPage() {
 
   const createMock = async () => {
     try {
-      const { data } = await api.post('/api/ielts/mocks', basicInfo);
+      const { data } = await api.post('/ielts/mocks', basicInfo);
       setMockId(data.id);
       return data.id;
     } catch (error) {
@@ -717,6 +719,22 @@ export default function CreateIeltsPage() {
                   Writing (60 daqiqa)
                 </h2>
                 
+                <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-xl">
+                  <label className="text-gray-300 font-medium">Writing yuklash usuli:</label>
+                  <button
+                    onClick={() => setWriting({ ...writing, uploadMode: 'manual' })}
+                    className={`px-4 py-2 rounded-lg transition ${writing.uploadMode === 'manual' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
+                  >
+                    ✍️ Qo'lda kiritish
+                  </button>
+                  <button
+                    onClick={() => toast('Fayl yuklash tez orada qo\'shiladi')}
+                    className={`px-4 py-2 rounded-lg transition ${writing.uploadMode === 'file' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
+                  >
+                    📄 Fayl yuklash (Tez orada)
+                  </button>
+                </div>
+                
                 <div className="space-y-6">
                   <div className="bg-white/5 rounded-xl p-6 space-y-4">
                     <h3 className="text-lg font-semibold text-white">Task 1 (20 daqiqa, min 150 so'z)</h3>
@@ -776,6 +794,22 @@ export default function CreateIeltsPage() {
                   <Mic size={24} />
                   Speaking (15 daqiqa)
                 </h2>
+                
+                <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-xl">
+                  <label className="text-gray-300 font-medium">Speaking yuklash usuli:</label>
+                  <button
+                    onClick={() => setSpeaking({ ...speaking, uploadMode: 'manual' })}
+                    className={`px-4 py-2 rounded-lg transition ${speaking.uploadMode === 'manual' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
+                  >
+                    ✍️ Qo'lda kiritish
+                  </button>
+                  <button
+                    onClick={() => toast('Fayl yuklash tez orada qo\'shiladi')}
+                    className={`px-4 py-2 rounded-lg transition ${speaking.uploadMode === 'file' ? 'gradient-bg text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
+                  >
+                    📄 Fayl yuklash (Tez orada)
+                  </button>
+                </div>
                 
                 <div className="space-y-6">
                   <div className="bg-white/5 rounded-xl p-6 space-y-4">
@@ -916,6 +950,25 @@ export default function CreateIeltsPage() {
                 </div>
               </div>
             )}
+          
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition"
+            >
+              <ArrowLeft size={18} />
+              {step === 1 ? 'Bekor qilish' : 'Orqaga'}
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold disabled:opacity-50"
+            >
+              {loading ? 'Saqlanmoqda...' : step === 5 ? 'Tugatish' : 'Davom etish'}
+              <ArrowRight size={18} />
+            </button>
+          </div>
           </div>
         </div>
       </main>

@@ -74,11 +74,4 @@ export class CentersController {
   toggleVip(@Param('id') id: string, @Body() dto: { isVip: boolean }) {
     return this.centersService.toggleVip(id, dto.isVip);
   }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
-  @Patch(':id/student-limit')
-  setStudentLimit(@Param('id') id: string, @Body() dto: { studentLimit: number }) {
-    return this.centersService.setStudentLimit(id, dto.studentLimit);
-  }
 }

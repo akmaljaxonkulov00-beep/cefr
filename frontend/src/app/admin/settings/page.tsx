@@ -36,7 +36,7 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await api.get('/admin/settings');
+      const { data } = await api.get('/api/admin/settings');
       setSettings(data);
     } catch (error) {
       toast.error('Sozlamalar yuklab olinmadi');

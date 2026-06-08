@@ -20,9 +20,9 @@ export default function AdminReports() {
   const fetchData = async () => {
     try {
       const [revenueRes, participationRes, centersRes] = await Promise.all([
-        api.get('/reports/revenue', { params: { period } }),
-        api.get('/reports/participation'),
-        api.get('/reports/centers'),
+        api.get('/api/reports/revenue', { params: { period } }),
+        api.get('/api/reports/participation'),
+        api.get('/api/reports/centers'),
       ]);
       setRevenue(revenueRes.data);
       setParticipation(participationRes.data);

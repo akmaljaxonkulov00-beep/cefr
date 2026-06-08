@@ -193,7 +193,8 @@ export class IeltsController {
         fileName: file.filename,
       };
     } catch (error: any) {
-      throw new Error(`PDF parse xatosi: ${error.message}`);
+      console.error('PDF upload error:', error);
+      throw new Error(`PDF parse xatosi: ${error.message || 'Noma\'lum xato'}`);
     }
   }
 }

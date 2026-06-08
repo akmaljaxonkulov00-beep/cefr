@@ -147,7 +147,6 @@ model Center {
   adminPassword        String?
   paymentInstructions  String?
   isVip                Boolean  @default(false)
-  studentLimit         Int?
   createdAt            DateTime @default(now()) @map("created_at")
 
   users  User[]
