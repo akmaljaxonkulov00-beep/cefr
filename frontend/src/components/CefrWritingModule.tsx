@@ -18,7 +18,7 @@ interface CefrWritingModuleProps {
   tasks: CefrWritingTask[];
   onAnswerChange: (taskId: string, answer: string) => void;
   answers: Record<string, string>;
-  level: 'B1' | 'B2' | 'C1';
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 }
 
 export default function CefrWritingModule({ tasks, onAnswerChange, answers, level }: CefrWritingModuleProps) {

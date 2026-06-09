@@ -186,9 +186,9 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex">
+    <div className="min-h-screen bg-[#0f172a] flex flex-col lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 lg:p-8 overflow-x-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div>
@@ -232,25 +232,25 @@ export default function AdminPage() {
 
           {tab === 'overview' && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-8">
                 {stats.map((stat, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="glass-dark rounded-xl p-5"
+                    className="glass-dark rounded-xl p-4 lg:p-5"
                   >
-                    <stat.icon size={24} className={stat.color + ' mb-3'} />
-                    <div className="text-2xl font-bold text-white">{loading ? '—' : stat.value}</div>
-                    <div className="text-gray-400 text-sm">{stat.label}</div>
+                    <stat.icon size={20} className={stat.color + ' mb-2'} />
+                    <div className="text-xl lg:text-2xl font-bold text-white">{loading ? '—' : stat.value}</div>
+                    <div className="text-gray-400 text-xs lg:text-sm">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
 
-              <div className="glass-dark rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Users size={20} className="text-primary-400" /> Foydalanuvchilar
+              <div className="glass-dark rounded-2xl p-4 lg:p-6">
+                <h3 className="text-base lg:text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Users size={18} className="text-primary-400" /> Foydalanuvchilar
                 </h3>
                 {loading ? (
                   <div className="text-center py-10">
@@ -258,22 +258,22 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-xs lg:text-sm">
                       <thead>
                         <tr className="border-b border-gray-800">
-                          <th className="text-left p-3 text-gray-400">Ism</th>
-                          <th className="text-left p-3 text-gray-400">Email</th>
-                          <th className="text-left p-3 text-gray-400">Rol</th>
-                          <th className="text-left p-3 text-gray-400">Aksiya</th>
+                          <th className="text-left p-2 lg:p-3 text-gray-400">Ism</th>
+                          <th className="text-left p-2 lg:p-3 text-gray-400">Email</th>
+                          <th className="text-left p-2 lg:p-3 text-gray-400">Rol</th>
+                          <th className="text-left p-2 lg:p-3 text-gray-400">Aksiya</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map((user: any) => (
                           <tr key={user.id} className="border-b border-gray-800">
-                            <td className="p-3 text-white">{user.name}</td>
-                            <td className="p-3 text-gray-400">{user.email}</td>
-                            <td className="p-3 text-gray-300">{user.role}</td>
-                            <td className="p-3 flex flex-wrap gap-2 items-center">
+                            <td className="p-2 lg:p-3 text-white">{user.name}</td>
+                            <td className="p-2 lg:p-3 text-gray-400">{user.email}</td>
+                            <td className="p-2 lg:p-3 text-gray-300">{user.role}</td>
+                            <td className="p-2 lg:p-3 flex flex-wrap gap-2 items-center">
                               <select
                                 className="bg-white/5 border border-gray-700 rounded-lg px-2 py-1 text-white text-xs"
                                 value={roleEdits[user.id] ?? user.role}

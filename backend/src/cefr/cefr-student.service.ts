@@ -171,10 +171,13 @@ export class CefrStudentService {
     const writingScore = await this.gradeWriting(
       answers.writingAnswers,
       attempt.mock.writing,
+      userId,
     );
     const speakingScore = await this.gradeSpeaking(
       answers.speakingAnswers,
       attempt.mock.speaking,
+      userId,
+      answers.speakingAudioUrls,
     );
 
     const totalScore = (listeningScore + readingScore + writingScore + speakingScore) / 4;
@@ -261,69 +264,127 @@ export class CefrStudentService {
     return total > 0 ? (correct / total) * 100 : 0;
   }
 
-  private async gradeWriting(answers: any, writing: any): Promise<number> {
+  private async gradeWriting(answers: any, writing: any, userId: string): Promise<number> {
     if (!answers || !writing) return 0;
 
     try {
-      const task11Result = answers.task11
-        ? await this.aiService.gradeIELTSWriting('system', {
-            taskType: 'TASK_1',
-            prompt: writing.task11?.context || '',
-            response: answers.task11,
-            wordCount: answers.task11.split(/\s+/).length,
-          })
-        : null;
+      let totalScore = 0;
+      let taskCount = 0;
 
-      const task12Result = answers.task12
-        ? await this.aiService.gradeIELTSWriting('system', {
-            taskType: 'TASK_1',
-            prompt: writing.task12?.context || '',
-            response: answers.task12,
-            wordCount: answers.task12.split(/\s+/).length,
-          })
-        : null;
+      // Grade task11
+      if (answers.task11 && answers.task11.length > 10) {
+        try {
+          const result = await this.aiService.analyzeWriting(userId, answers.task11);
+          totalScore += (result.grammarScore || 0) + (result.vocabScore || 0) + (result.coherenceScore || 0);
+          taskCount++;
+        } catch (e) {
+          console.error('Task 1.1 grading error:', e);
+        }
+      }
 
-      const task2Result = answers.task2
-        ? await this.aiService.gradeIELTSWriting('system', {
-            taskType: 'TASK_2',
-            prompt: writing.task2?.prompt || '',
-            response: answers.task2,
-            wordCount: answers.task2.split(/\s+/).length,
-          })
-        : null;
+      // Grade task12
+      if (answers.task12 && answers.task12.length > 10) {
+        try {
+          const result = await this.aiService.analyzeWriting(userId, answers.task12);
+          totalScore += (result.grammarScore || 0) + (result.vocabScore || 0) + (result.coherenceScore || 0);
+          taskCount++;
+        } catch (e) {
+          console.error('Task 1.2 grading error:', e);
+        }
+      }
 
-      const task11Score = (task11Result as any)?.overallBand || 6.0;
-      const task12Score = (task12Result as any)?.overallBand || 6.0;
-      const task2Score = (task2Result as any)?.overallBand || 6.0;
+      // Grade task2
+      if (answers.task2 && answers.task2.length > 10) {
+        try {
+          const result = await this.aiService.analyzeWriting(userId, answers.task2);
+          totalScore += (result.grammarScore || 0) + (result.vocabScore || 0) + (result.coherenceScore || 0);
+          taskCount++;
+        } catch (e) {
+          console.error('Task 2 grading error:', e);
+        }
+      }
 
-      return ((task11Score + task12Score + task2Score) / 3) * 10;
+      return taskCount > 0 ? (totalScore / (taskCount * 3)) * 100 : 60.0;
     } catch (error) {
       console.error('Writing grading error:', error);
       return 60.0;
     }
   }
 
-  private async gradeSpeaking(answers: any, speaking: any): Promise<number> {
+  private async gradeSpeaking(answers: any, speaking: any, userId: string, speakingAudioUrls: any): Promise<number> {
     if (!answers || !speaking) return 0;
 
     try {
-      const task1Result = answers.task1
-        ? await this.aiService.gradeIELTSSpeaking('system', Buffer.from(''), 'task1.mp3', 'audio/mpeg', speaking.task1?.questions?.[0] || '')
-        : null;
+      let totalScore = 0;
+      let taskCount = 0;
 
-      const task2Result = answers.task2
-        ? await this.aiService.gradeIELTSSpeaking('system', Buffer.from(''), 'task2.mp3', 'audio/mpeg', speaking.task2?.topic || '')
-        : null;
+      // If audio URLs are provided, download and evaluate with AI
+      if (speakingAudioUrls) {
+        for (const [partId, audioUrl] of Object.entries(speakingAudioUrls)) {
+          try {
+            // Download audio from URL
+            const response = await fetch(audioUrl as string);
+            const buffer = Buffer.from(await response.arrayBuffer());
+            
+            const result = await this.aiService.analyzeSpeakingFromAudio(
+              userId,
+              buffer,
+              `${partId}.webm`,
+              'audio/webm'
+            );
+            
+            totalScore += result.overallScore || 60;
+            taskCount++;
+          } catch (e) {
+            console.error(`Speaking grading error for ${partId}:`, e);
+          }
+        }
+      }
 
-      const task3Result = answers.task3
-        ? await this.aiService.gradeIELTSSpeaking('system', Buffer.from(''), 'task3.mp3', 'audio/mpeg', speaking.task3?.topic || '')
-        : null;
+      // Fallback: if transcript provided, evaluate with transcript-only
+      if (taskCount === 0 && answers.task1) {
+        try {
+          const result = await this.aiService.analyzeSpeakingFromTranscriptOnly(
+            userId,
+            speakingAudioUrls?.task1,
+            answers.task1
+          );
+          totalScore += result.overallScore || 60;
+          taskCount++;
+        } catch (e) {
+          console.error('Task 1 transcript grading error:', e);
+        }
+      }
 
-      const task1Score = task1Result?.record?.overallScore || 6.0;
-      const task2Score = task2Result?.record?.overallScore || 6.0;
-      const task3Score = task3Result?.record?.overallScore || 6.0;
+      if (taskCount === 0 && answers.task2) {
+        try {
+          const result = await this.aiService.analyzeSpeakingFromTranscriptOnly(
+            userId,
+            speakingAudioUrls?.task2,
+            answers.task2
+          );
+          totalScore += result.overallScore || 60;
+          taskCount++;
+        } catch (e) {
+          console.error('Task 2 transcript grading error:', e);
+        }
+      }
 
-      return ((task1Score + task2Score + task3Score) / 3) * 10;
+      if (taskCount === 0 && answers.task3) {
+        try {
+          const result = await this.aiService.analyzeSpeakingFromTranscriptOnly(
+            userId,
+            speakingAudioUrls?.task3,
+            answers.task3
+          );
+          totalScore += result.overallScore || 60;
+          taskCount++;
+        } catch (e) {
+          console.error('Task 3 transcript grading error:', e);
+        }
+      }
+
+      return taskCount > 0 ? totalScore / taskCount : 60.0;
     } catch (error) {
       console.error('Speaking grading error:', error);
       return 60.0;

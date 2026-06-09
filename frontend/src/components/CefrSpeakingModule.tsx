@@ -18,7 +18,7 @@ export interface CefrSpeakingPart {
 interface CefrSpeakingModuleProps {
   parts: CefrSpeakingPart[];
   onRecordingComplete: (partId: string, audioBlob: Blob) => void;
-  level: 'B1' | 'B2' | 'C1';
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 }
 
 export default function CefrSpeakingModule({ parts, onRecordingComplete, level }: CefrSpeakingModuleProps) {
@@ -403,18 +403,33 @@ export default function CefrSpeakingModule({ parts, onRecordingComplete, level }
           <div className="bg-white/5 rounded-xl p-4">
             <h5 className="text-sm font-semibold text-gray-400 mb-2">Tips for {level} Level:</h5>
             <ul className="space-y-1 text-sm text-gray-300">
-              {level === 'B1' && (
+              {level === 'A1' && (
+                <>
+                  <li>• Speak slowly and clearly</li>
+                  <li>• Use simple words and short sentences</li>
+                  <li>• Give basic information about yourself</li>
+                </>
+              )}
+              {level === 'A2' && (
                 <>
                   <li>• Speak clearly and at a natural pace</li>
                   <li>• Use simple but correct vocabulary</li>
                   <li>• Give short, direct answers to questions</li>
                 </>
               )}
-              {level === 'B2' && (
+              {level === 'B1' && (
                 <>
                   <li>• Use a variety of vocabulary and expressions</li>
                   <li>• Develop your answers with examples</li>
                   <li>• Use appropriate linking words</li>
+                  <li>• Show ability to discuss familiar topics</li>
+                </>
+              )}
+              {level === 'B2' && (
+                <>
+                  <li>• Use sophisticated vocabulary and expressions</li>
+                  <li>• Develop your answers with examples</li>
+                  <li>• Use appropriate discourse markers</li>
                   <li>• Show ability to discuss abstract topics</li>
                 </>
               )}
@@ -424,6 +439,14 @@ export default function CefrSpeakingModule({ parts, onRecordingComplete, level }
                   <li>• Express complex ideas with precision</li>
                   <li>• Use appropriate discourse markers</li>
                   <li>• Demonstrate critical thinking skills</li>
+                </>
+              )}
+              {level === 'C2' && (
+                <>
+                  <li>• Use precise and sophisticated vocabulary</li>
+                  <li>• Express complex ideas with ease and nuance</li>
+                  <li>• Demonstrate mastery of discourse markers</li>
+                  <li>• Handle any topic with confidence</li>
                 </>
               )}
             </ul>

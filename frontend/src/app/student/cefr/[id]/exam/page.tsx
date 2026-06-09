@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Clock, Save, Send } from 'lucide-react';
+import { ArrowLeft, Clock, Save, Send, Mic, MicOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CefrSpeakingModule from '@/components/CefrSpeakingModule';
+import CefrWritingModule from '@/components/CefrWritingModule';
+import CefrReadingModule from '@/components/CefrReadingModule';
+import CefrListeningModule from '@/components/CefrListeningModule';
 
 interface CefrMock {
   id: string;
@@ -50,6 +54,11 @@ export default function StudentCefrExamPage() {
     writingAnswers: {} as any,
     speakingAnswers: {} as any,
   });
+
+  const [speakingAudioBlobs, setSpeakingAudioBlobs] = useState<Record<string, Blob>>({});
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     fetchMockData();
@@ -104,10 +113,34 @@ export default function StudentCefrExamPage() {
     }
   };
 
+  const handleRecordingComplete = (partId: string, audioBlob: Blob) => {
+    setSpeakingAudioBlobs(prev => ({ ...prev, [partId]: audioBlob }));
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await api.post(`/api/cefr/student/mocks/${mockId}/submit`, answers);
+      // Upload speaking audio blobs and get URLs
+      const speakingAudioUrls: Record<string, string> = {};
+      for (const [partId, blob] of Object.entries(speakingAudioBlobs)) {
+        try {
+          const formData = new FormData();
+          formData.append('file', blob, `speaking-${partId}.webm`);
+          const { data } = await api.post('/api/cefr/upload/audio', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          speakingAudioUrls[partId] = data.url;
+        } catch (error) {
+          console.error('Failed to upload audio:', error);
+        }
+      }
+
+      const submitData = {
+        ...answers,
+        speakingAudioUrls,
+      };
+
+      await api.post(`/api/cefr/student/mocks/${mockId}/submit`, submitData);
       toast.success('Imtihon tugatildi');
       router.push(`/student/cefr/${mockId}/result`);
     } catch (error) {
@@ -136,9 +169,9 @@ export default function StudentCefrExamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-6 lg:p-8">
+    <div className="min-h-screen bg-[#0f172a] p-4 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(`/student/cefr/${mockId}`)}
@@ -147,31 +180,31 @@ export default function StudentCefrExamPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white">{mock.title}</h1>
-            <p className="text-gray-400 capitalize">{currentSection}</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-white">{mock.title}</h1>
+            <p className="text-gray-400 capitalize text-sm lg:text-base">{currentSection}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl">
-            <Clock size={20} className="text-primary-500" />
-            <span className="text-white font-mono text-xl">{formatTime(timeLeft)}</span>
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 rounded-xl flex-1 sm:flex-none">
+            <Clock size={18} className="text-primary-500" />
+            <span className="text-white font-mono text-lg">{formatTime(timeLeft)}</span>
           </div>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 text-white rounded-xl hover:bg-white/10 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 text-white rounded-xl hover:bg-white/10 transition disabled:opacity-50 text-sm sm:text-base"
           >
-            <Save size={20} />
-            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            <Save size={18} />
+            <span className="hidden sm:inline">{saving ? 'Saqlanmoqda...' : 'Saqlash'}</span>
           </button>
         </div>
       </div>
 
       {/* Section Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 sm:pb-0">
         <button
           onClick={() => setCurrentSection('listening')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base ${
             currentSection === 'listening'
               ? 'gradient-bg text-white'
               : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -181,7 +214,7 @@ export default function StudentCefrExamPage() {
         </button>
         <button
           onClick={() => setCurrentSection('reading')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base ${
             currentSection === 'reading'
               ? 'gradient-bg text-white'
               : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -191,7 +224,7 @@ export default function StudentCefrExamPage() {
         </button>
         <button
           onClick={() => setCurrentSection('writing')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base ${
             currentSection === 'writing'
               ? 'gradient-bg text-white'
               : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -201,7 +234,7 @@ export default function StudentCefrExamPage() {
         </button>
         <button
           onClick={() => setCurrentSection('speaking')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base ${
             currentSection === 'speaking'
               ? 'gradient-bg text-white'
               : 'bg-white/5 text-gray-300 hover:bg-white/10'
@@ -212,22 +245,30 @@ export default function StudentCefrExamPage() {
       </div>
 
       {/* Section Content */}
-      <div className="glass-dark rounded-2xl p-8">
+      <div className="glass-dark rounded-2xl p-4 sm:p-6 lg:p-8">
         {currentSection === 'listening' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white mb-4">Listening Section</h2>
             {mock.listening?.sections?.map((section: any, idx: number) => (
-              <div key={idx} className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Section {idx + 1}</h3>
-                {section.audioUrl && (
-                  <audio controls className="w-full mb-4">
-                    <source src={section.audioUrl} type="audio/mpeg" />
-                  </audio>
-                )}
-                <p className="text-gray-400">
-                  Audio faylni tinglang va savollarga javob bering.
-                </p>
-              </div>
+              <CefrListeningModule
+                key={idx}
+                audioUrl={section.audioUrl || ''}
+                transcript={section.transcript}
+                questions={section.questions || []}
+                onAnswerChange={(questionId, answer) => {
+                  setAnswers({
+                    ...answers,
+                    listeningAnswers: {
+                      ...answers.listeningAnswers,
+                      [`section${idx + 1}`]: {
+                        ...answers.listeningAnswers[`section${idx + 1}`],
+                    [questionId]: answer
+                      }
+                    }
+                  });
+                }}
+                answers={answers.listeningAnswers[`section${idx + 1}`] || {}}
+              />
             ))}
           </div>
         )}
@@ -236,120 +277,116 @@ export default function StudentCefrExamPage() {
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white mb-4">Reading Section</h2>
             {mock.reading?.passages?.map((passage: any, idx: number) => (
-              <div key={idx} className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Passage {idx + 1}</h3>
-                <div className="text-gray-300 mb-4 whitespace-pre-wrap">
-                  {passage.text || 'Matn yuklanmagan...'}
-                </div>
-              </div>
+              <CefrReadingModule
+                key={idx}
+                passage={passage.text || 'Matn yuklanmagan...'}
+                questions={passage.questions || []}
+                onAnswerChange={(questionId, gapId, answer) => {
+                  setAnswers({
+                    ...answers,
+                    readingAnswers: {
+                      ...answers.readingAnswers,
+                      [`passage${idx + 1}`]: {
+                        ...answers.readingAnswers[`passage${idx + 1}`],
+                        [questionId]: {
+                          ...answers.readingAnswers[`passage${idx + 1}`]?.[questionId],
+                          [gapId]: answer
+                        }
+                      }
+                    }
+                  });
+                }}
+                answers={answers.readingAnswers[`passage${idx + 1}`] || {}}
+              />
             ))}
           </div>
         )}
 
         {currentSection === 'writing' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white mb-4">Writing Section</h2>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 1.1</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.writing?.task11?.instruction || 'Task 1.1 instruction yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
-                placeholder="Javobingizni yozing..."
-                value={answers.writingAnswers.task11 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  writingAnswers: { ...answers.writingAnswers, task11: e.target.value }
-                })}
-              />
-            </div>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 1.2</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.writing?.task12?.instruction || 'Task 1.2 instruction yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
-                placeholder="Javobingizni yozing..."
-                value={answers.writingAnswers.task12 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  writingAnswers: { ...answers.writingAnswers, task12: e.target.value }
-                })}
-              />
-            </div>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 2</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.writing?.task2?.prompt || 'Task 2 prompt yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-48"
-                placeholder="Javobingizni yozing..."
-                value={answers.writingAnswers.task2 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  writingAnswers: { ...answers.writingAnswers, task2: e.target.value }
-                })}
-              />
-            </div>
-          </div>
+          <CefrWritingModule
+            tasks={[
+              {
+                id: 'task11',
+                taskNumber: 1,
+                taskType: (mock.writing?.task11?.type || 'LETTER') as any,
+                prompt: mock.writing?.task11?.instruction || '',
+                bulletPoints: mock.writing?.task11?.bulletPoints || [],
+                minWords: mock.writing?.task11?.minWords || 50,
+                maxWords: mock.writing?.task11?.maxWords || 150,
+                timeLimit: mock.writing?.duration || 20,
+              },
+              {
+                id: 'task12',
+                taskNumber: 1,
+                taskType: (mock.writing?.task12?.type || 'EMAIL') as any,
+                prompt: mock.writing?.task12?.instruction || '',
+                bulletPoints: mock.writing?.task12?.bulletPoints || [],
+                minWords: mock.writing?.task12?.minWords || 50,
+                maxWords: mock.writing?.task12?.maxWords || 150,
+                timeLimit: mock.writing?.duration || 20,
+              },
+              {
+                id: 'task2',
+                taskNumber: 2,
+                taskType: (mock.writing?.task2?.type || 'ESSAY') as any,
+                prompt: mock.writing?.task2?.prompt || '',
+                bulletPoints: mock.writing?.task2?.bulletPoints || [],
+                minWords: mock.writing?.task2?.minWords || 150,
+                maxWords: mock.writing?.task2?.maxWords || 250,
+                timeLimit: mock.writing?.duration || 40,
+              },
+            ]}
+            onAnswerChange={(taskId, answer) => {
+              setAnswers({
+                ...answers,
+                writingAnswers: { ...answers.writingAnswers, [taskId]: answer }
+              });
+            }}
+            answers={answers.writingAnswers}
+            level={mock.level}
+          />
         )}
 
         {currentSection === 'speaking' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white mb-4">Speaking Section</h2>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 1</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.speaking?.task1?.questions?.[0] || 'Savol yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
-                placeholder="Javobingizni yozing..."
-                value={answers.speakingAnswers.task1 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  speakingAnswers: { ...answers.speakingAnswers, task1: e.target.value }
-                })}
-              />
-            </div>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 2</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.speaking?.task2?.topic || 'Mavzu yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
-                placeholder="Javobingizni yozing..."
-                value={answers.speakingAnswers.task2 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  speakingAnswers: { ...answers.speakingAnswers, task2: e.target.value }
-                })}
-              />
-            </div>
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Task 3</h3>
-              <p className="text-gray-400 mb-4">
-                {mock.speaking?.task3?.topic || 'Mavzu yuklanmagan...'}
-              </p>
-              <textarea
-                className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition h-32"
-                placeholder="Javobingizni yozing..."
-                value={answers.speakingAnswers.task3 || ''}
-                onChange={(e) => setAnswers({
-                  ...answers,
-                  speakingAnswers: { ...answers.speakingAnswers, task3: e.target.value }
-                })}
-              />
-            </div>
-          </div>
+          <CefrSpeakingModule
+            parts={[
+              {
+                id: 'task1',
+                partNumber: 1,
+                title: 'Task 1 - Shaxsiy savollar',
+                description: mock.speaking?.task1?.description || 'Shaxsiy savollarga javob bering',
+                questions: mock.speaking?.task1?.questions || [],
+                preparationTime: mock.speaking?.task1?.prepTime || 30,
+                responseTime: mock.speaking?.task1?.speakTime || 120,
+              },
+              {
+                id: 'task2',
+                partNumber: 2,
+                title: 'Task 2 - Rasm tavsifi',
+                description: mock.speaking?.task2?.description || 'Rasmni tasviring',
+                questions: mock.speaking?.task2?.guidingQuestions || [],
+                imageUrls: mock.speaking?.task2?.images || [],
+                bulletPoints: mock.speaking?.task2?.bulletPoints || [],
+                preparationTime: mock.speaking?.task2?.prepTime || 30,
+                responseTime: mock.speaking?.task2?.speakTime || 180,
+              },
+              {
+                id: 'task3',
+                partNumber: 3,
+                title: 'Task 3 - Muhokama',
+                description: mock.speaking?.task3?.description || 'Muhokama qiling',
+                questions: mock.speaking?.task3?.followUpQuestions || [],
+                preparationTime: mock.speaking?.task3?.prepTime || 30,
+                responseTime: mock.speaking?.task3?.speakTime || 360,
+              },
+            ]}
+            onRecordingComplete={handleRecordingComplete}
+            level={mock.level}
+          />
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between mt-8 pt-6 border-t border-gray-800">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-800">
           <button
             onClick={() => {
               if (currentSection === 'reading') setCurrentSection('listening');
@@ -357,7 +394,7 @@ export default function StudentCefrExamPage() {
               else if (currentSection === 'speaking') setCurrentSection('writing');
             }}
             disabled={currentSection === 'listening'}
-            className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white rounded-xl font-semibold hover:bg-white/10 transition disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-white rounded-xl font-semibold hover:bg-white/10 transition disabled:opacity-50 min-h-[44px]"
           >
             Orqaga
           </button>
@@ -365,7 +402,7 @@ export default function StudentCefrExamPage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50 min-h-[44px]"
             >
               {submitting ? 'Tugatilmoqda...' : 'Imtihonni tugatish'}
               <Send size={20} />
@@ -373,7 +410,7 @@ export default function StudentCefrExamPage() {
           ) : (
             <button
               onClick={handleNextSection}
-              className="flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90"
+              className="flex items-center justify-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 min-h-[44px]"
             >
               Keyingi qism
               <ArrowLeft size={20} className="rotate-180" />
