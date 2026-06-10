@@ -21,6 +21,10 @@ interface IeltsMock {
   _count?: {
     attempts: number;
   };
+  listening?: any;
+  reading?: any;
+  writing?: any;
+  speaking?: any;
 }
 
 export default function AdminIeltsPage() {
@@ -86,6 +90,22 @@ export default function AdminIeltsPage() {
     } catch (error) {
       toast.error('IELTS mock holatini o\'zgartirib bo\'lmadi');
     }
+  };
+
+  const getSectionStatus = (section: any) => {
+    if (!section) return '✗';
+    if (section.sections && section.sections.length > 0) return '✓';
+    if (section.passages && section.passages.length > 0) return '✓';
+    if (section.task1 || section.task2 || section.part1) return '✓';
+    return '✗';
+  };
+
+  const getSectionColor = (section: any) => {
+    if (!section) return 'text-red-400';
+    if (section.sections && section.sections.length > 0) return 'text-green-400';
+    if (section.passages && section.passages.length > 0) return 'text-green-400';
+    if (section.task1 || section.task2 || section.part1) return 'text-green-400';
+    return 'text-red-400';
   };
 
   if (loading) {
@@ -257,6 +277,7 @@ export default function AdminIeltsPage() {
                   <th className="text-left p-4 text-gray-400 font-medium">Nomi</th>
                   <th className="text-left p-4 text-gray-400 font-medium">Turi</th>
                   <th className="text-left p-4 text-gray-400 font-medium">Daraja</th>
+                  <th className="text-left p-4 text-gray-400 font-medium">Bo'limlar</th>
                   <th className="text-left p-4 text-gray-400 font-medium">Davomiylik</th>
                   <th className="text-left p-4 text-gray-400 font-medium">Narxi</th>
                   <th className="text-left p-4 text-gray-400 font-medium">Topshirganlar</th>
@@ -286,6 +307,14 @@ export default function AdminIeltsPage() {
                       }`}>
                         {mock.level}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2 text-xs">
+                        <span className={getSectionColor(mock.listening)}>L {getSectionStatus(mock.listening)}</span>
+                        <span className={getSectionColor(mock.reading)}>R {getSectionStatus(mock.reading)}</span>
+                        <span className={getSectionColor(mock.writing)}>W {getSectionStatus(mock.writing)}</span>
+                        <span className={getSectionColor(mock.speaking)}>S {getSectionStatus(mock.speaking)}</span>
+                      </div>
                     </td>
                     <td className="p-4 text-gray-300">{mock.duration} daqiqa</td>
                     <td className="p-4 text-gray-300">

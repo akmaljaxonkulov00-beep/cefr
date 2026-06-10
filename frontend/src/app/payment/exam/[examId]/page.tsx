@@ -21,6 +21,9 @@ export default function ExamPaymentPage() {
   const [done, setDone] = useState(false);
   const [paymentInstructions, setPaymentInstructions] = useState<string>('');
   const [centerName, setCenterName] = useState<string>('');
+  const [activeCard, setActiveCard] = useState<any>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
     fetchPaymentInstructions();
@@ -36,9 +39,21 @@ export default function ExamPaymentPage() {
         const { data: settings } = await api.get('/api/admin/settings');
         setPaymentInstructions(settings.paymentInstructions || '');
       }
+      const { data: card } = await api.get('/api/admin/settings/payment-cards/active');
+      setActiveCard(card);
     } catch (error) {
       console.error('Failed to fetch payment instructions');
     }
+  };
+
+  const handleFileSelect = (selectedFile: File) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (selectedFile.size > maxSize) {
+      toast.error('Fayl hajmi 5MB dan oshmasligi kerak');
+      return;
+    }
+    setFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
   };
 
   const submit = async () => {
@@ -47,10 +62,18 @@ export default function ExamPaymentPage() {
       return;
     }
     setLoading(true);
+    setUploadProgress(0);
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const up = await api.post('/api/uploads/payment-proof', fd);
+      
+      const up = await api.post('/api/uploads/payment-proof', fd, {
+        onUploadProgress: (progressEvent) => {
+          const progress = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
+          setUploadProgress(progress);
+        },
+      });
+      
       const key = up.data.storageKey as string;
       await api.post('/api/manual-payments', { examId, screenshotKey: key, amountNote: amountNote || undefined });
       setDone(true);
@@ -59,6 +82,7 @@ export default function ExamPaymentPage() {
       toast.error(e.response?.data?.message || 'Xatolik');
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -84,6 +108,20 @@ export default function ExamPaymentPage() {
             </div>
           )}
 
+          {activeCard && (
+            <div className="glass-dark rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CreditCard size={20} className="text-emerald-400" />
+                <h3 className="text-lg font-semibold text-white">Aktiv Karta</h3>
+              </div>
+              <div className="bg-white/5 rounded-xl p-4">
+                <p className="text-white font-medium text-lg">{activeCard.cardNumber}</p>
+                <p className="text-gray-400">{activeCard.cardHolderName}</p>
+                <p className="text-gray-500 text-sm">{activeCard.bankName} • {activeCard.cardType}</p>
+              </div>
+            </div>
+          )}
+
           {done ? (
             <div className="glass-dark rounded-2xl p-8 text-center">
               <CheckCircle className="text-emerald-400 mx-auto mb-4" size={48} />
@@ -95,14 +133,40 @@ export default function ExamPaymentPage() {
           ) : (
             <div className="glass-dark rounded-2xl p-8 space-y-5">
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Chek rasmi (JPEG/PNG/WEBP)</label>
+                <label className="block text-sm text-gray-300 mb-2">Chek rasmi (JPEG/PNG/WEBP, max 5MB)</label>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                   className="w-full text-sm text-gray-300"
                 />
               </div>
+
+              {previewUrl && (
+                <div className="mt-4">
+                  <label className="block text-sm text-gray-300 mb-2">Preview</label>
+                  <img
+                    src={previewUrl}
+                    alt="Chek preview"
+                    className="max-w-full h-auto rounded-lg border border-gray-700"
+                  />
+                </div>
+              )}
+
+              {loading && uploadProgress > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-300">Yuklanmoqda...</span>
+                    <span className="text-sm text-gray-300">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div
+                      className="gradient-bg h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-gray-300 mb-2">Izoh (ixtiyoriy, masalan summa)</label>
                 <input

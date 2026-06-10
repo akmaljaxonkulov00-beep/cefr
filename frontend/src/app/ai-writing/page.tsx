@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
@@ -13,6 +13,41 @@ export default function AIWritingPage() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [examType, setExamType] = useState<'CEFR' | 'IELTS'>('CEFR');
+  const [mode, setMode] = useState<'practice' | 'free'>('practice');
+  const [prompt, setPrompt] = useState<any>(null);
+  const [prompts, setPrompts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (mode === 'practice') {
+      loadPrompts();
+    }
+  }, [mode, examType]);
+
+  const loadPrompts = async () => {
+    try {
+      const { data } = await api.get('/question-bank', {
+        params: { type: 'writing', examType, limit: 10 }
+      });
+      setPrompts(data);
+      if (data.length > 0) {
+        setPrompt(data[0]);
+        setTopic(data[0].title);
+      }
+    } catch (error) {
+      console.error('Failed to load prompts');
+    }
+  };
+
+  const nextPrompt = () => {
+    const currentIndex = prompts.findIndex(p => p.id === prompt?.id);
+    if (currentIndex < prompts.length - 1) {
+      const next = prompts[currentIndex + 1];
+      setPrompt(next);
+      setTopic(next.title);
+    } else {
+      toast.success('Barcha mavzular tugadi');
+    }
+  };
 
   const topics = [
     'Technology and Society',
@@ -68,6 +103,48 @@ export default function AIWritingPage() {
               </button>
             </div>
           </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Rejim</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setMode('practice')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === 'practice' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                Practice (Mavzular)
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('free')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === 'free' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                Free (Erkin)
+              </button>
+            </div>
+          </div>
+
+          {mode === 'practice' && prompt && (
+            <div className="mb-6 glass-dark rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Mavzu {prompts.findIndex(p => p.id === prompt.id) + 1}/{prompts.length}</h3>
+                <button
+                  onClick={nextPrompt}
+                  className="px-3 py-1 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition"
+                >
+                  Keyingi mavzu
+                </button>
+              </div>
+              <p className="text-gray-200">{prompt.title}</p>
+              {prompt.content && (
+                <div className="mt-3 text-gray-400 text-sm whitespace-pre-wrap">{JSON.stringify(prompt.content, null, 2)}</div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>

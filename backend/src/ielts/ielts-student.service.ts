@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { ManualPaymentsService } from '../manual-payments/manual-payments.service';
 
 @Injectable()
 export class IeltsStudentService {
   constructor(
     private prisma: PrismaService,
     private aiService: AiService,
+    private manualPayments: ManualPaymentsService,
   ) {}
 
   async getActiveMocks(type?: 'Academic' | 'General', level?: 'B1' | 'B2' | 'C1' | 'C2', userId?: string) {
@@ -90,6 +92,13 @@ export class IeltsStudentService {
 
     if (!mock) {
       throw new NotFoundException('IELTS mock not found');
+    }
+
+    if (mock.isPaid) {
+      const hasEntitlement = await this.manualPayments.userHasActiveEntitlement(userId, id);
+      if (!hasEntitlement) {
+        throw new BadRequestException('Bu mockni boshlash uchun to\'lov qilishingiz kerak');
+      }
     }
 
     const existingAttempt = await (this.prisma as any).ieltsAttempt.findFirst({

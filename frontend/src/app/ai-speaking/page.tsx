@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
@@ -55,7 +55,48 @@ export default function AISpeakingPage() {
   const [result, setResult] = useState<SpeakingResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [examType, setExamType] = useState<'CEFR' | 'IELTS'>('CEFR');
+  const [mode, setMode] = useState<'practice' | 'free'>('practice');
+  const [currentPart, setCurrentPart] = useState<1 | 2 | 3>(1);
+  const [question, setQuestion] = useState<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+
+  useEffect(() => {
+    if (mode === 'practice') {
+      loadQuestions();
+    }
+  }, [mode, examType, currentPart]);
+
+  const loadQuestions = async () => {
+    try {
+      const { data } = await api.get('/question-bank', {
+        params: { type: 'speaking', examType, limit: 10 }
+      });
+      setQuestions(data);
+      if (data.length > 0) {
+        setQuestion(data[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load questions');
+    }
+  };
+
+  const nextQuestion = () => {
+    const currentIndex = questions.findIndex(q => q.id === question?.id);
+    if (currentIndex < questions.length - 1) {
+      setQuestion(questions[currentIndex + 1]);
+    } else {
+      toast.success('Barcha savollar tugadi');
+    }
+  };
+
+  const nextPart = () => {
+    if (currentPart < 3) {
+      setCurrentPart((currentPart + 1) as 1 | 2 | 3);
+      setQuestion(null);
+      loadQuestions();
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -143,6 +184,91 @@ export default function AISpeakingPage() {
               </button>
             </div>
           </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Rejim</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setMode('practice')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === 'practice' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                Practice (Savollar)
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('free')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === 'free' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                Free (Erkin)
+              </button>
+            </div>
+          </div>
+
+          {mode === 'practice' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Part</label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPart(1)}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    currentPart === 1 ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                  }`}
+                >
+                  Part 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPart(2)}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    currentPart === 2 ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                  }`}
+                >
+                  Part 2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPart(3)}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    currentPart === 3 ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                  }`}
+                >
+                  Part 3
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'practice' && question && (
+            <div className="mb-6 glass-dark rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Savol {questions.findIndex(q => q.id === question.id) + 1}/{questions.length}</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={nextQuestion}
+                    className="px-3 py-1 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition"
+                  >
+                    Keyingi savol
+                  </button>
+                  <button
+                    onClick={nextPart}
+                    className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition"
+                  >
+                    Keyingi Part
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-200">{question.title}</p>
+              {question.content && (
+                <div className="mt-3 text-gray-400 text-sm whitespace-pre-wrap">{JSON.stringify(question.content, null, 2)}</div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="glass-dark rounded-2xl p-8 text-center">

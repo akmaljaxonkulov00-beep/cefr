@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { ManualPaymentsService } from '../manual-payments/manual-payments.service';
 
 @Injectable()
 export class CefrStudentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
+    private readonly manualPayments: ManualPaymentsService,
   ) {}
 
   async getActiveMocks(level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2', userId?: string) {
@@ -89,6 +91,13 @@ export class CefrStudentService {
 
     if (!mock) {
       throw new NotFoundException('CEFR mock not found');
+    }
+
+    if (mock.isPaid) {
+      const hasEntitlement = await this.manualPayments.userHasActiveEntitlement(userId, id);
+      if (!hasEntitlement) {
+        throw new BadRequestException('Bu mockni boshlash uchun to\'lov qilishingiz kerak');
+      }
     }
 
     const existingAttempt = await (this.prisma as any).cefrAttempt.findFirst({

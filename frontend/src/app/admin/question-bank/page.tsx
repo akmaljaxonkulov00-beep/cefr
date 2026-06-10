@@ -97,6 +97,38 @@ export default function QuestionBankPage() {
     }
   };
 
+  const handleBulkUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const questions = JSON.parse(text);
+        
+        if (!Array.isArray(questions)) {
+          toast.error('JSON formati noto\'g\'ri. Array bo\'lishi kerak.');
+          return;
+        }
+
+        setLoading(true);
+        for (const q of questions) {
+          await api.post('/question-bank', q);
+        }
+        toast.success(`${questions.length} ta savol muvaffaqiyatli qo\'shildi`);
+        fetchQuestions();
+      } catch (error) {
+        toast.error('JSON faylni o\'qishda xatolik');
+      } finally {
+        setLoading(false);
+      }
+    };
+    input.click();
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'speaking': return <Mic size={16} />;
@@ -136,13 +168,22 @@ export default function QuestionBankPage() {
               <h1 className="text-3xl font-bold text-white mb-2">Savol Banki</h1>
               <p className="text-gray-400 text-sm">CEFR va IELTS savollarini boshqaring</p>
             </div>
-            <button
-              onClick={() => { setEditingQuestion(null); setShowModal(true); }}
-              className="flex items-center gap-2 px-6 py-3 gradient-bg rounded-xl text-white font-medium hover:gradient-bg-hover transition"
-            >
-              <Plus size={20} />
-              Yangi Savol
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setEditingQuestion(null); setShowModal(true); }}
+                className="flex items-center gap-2 px-6 py-3 gradient-bg rounded-xl text-white font-medium hover:gradient-bg-hover transition"
+              >
+                <Plus size={20} />
+                Yangi Savol
+              </button>
+              <button
+                onClick={() => handleBulkUpload()}
+                className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-gray-700 rounded-xl text-white font-medium hover:bg-white/10 transition"
+              >
+                <Upload size={20} />
+                Bulk JSON
+              </button>
+            </div>
           </div>
 
           <div className="glass-dark rounded-2xl p-6 mb-6">
