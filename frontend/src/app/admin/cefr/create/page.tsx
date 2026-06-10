@@ -18,6 +18,7 @@ export default function CreateCefrPage() {
   const [usePdfUpload, setUsePdfUpload] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [parsedPdfData, setParsedPdfData] = useState<any>(null);
+  const [error, setError] = useState<string>('');
 
   const [basicInfo, setBasicInfo] = useState({
     title: '',
@@ -170,11 +171,14 @@ export default function CreateCefrPage() {
 
   const createMock = async () => {
     try {
+      setError('');
       const { data } = await api.post('/api/cefr/mocks', basicInfo);
       setMockId(data.id);
       return data.id;
-    } catch (error) {
-      toast.error('Mock yaratilmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Mock yaratilmadi';
+      setError(errorMessage);
+      toast.error(errorMessage);
       return null;
     }
   };
@@ -182,40 +186,52 @@ export default function CreateCefrPage() {
   const saveListening = async () => {
     if (!mockId) return;
     try {
+      setError('');
       await api.post(`/api/cefr/mocks/${mockId}/listening`, listening);
       toast.success('Listening saqlandi');
-    } catch (error) {
-      toast.error('Listening saqlanmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Listening saqlanmadi';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   const saveReading = async () => {
     if (!mockId) return;
     try {
+      setError('');
       await api.post(`/api/cefr/mocks/${mockId}/reading`, reading);
       toast.success('Reading saqlandi');
-    } catch (error) {
-      toast.error('Reading saqlanmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Reading saqlanmadi';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   const saveWriting = async () => {
     if (!mockId) return;
     try {
+      setError('');
       await api.post(`/api/cefr/mocks/${mockId}/writing`, writing);
       toast.success('Writing saqlandi');
-    } catch (error) {
-      toast.error('Writing saqlanmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Writing saqlanmadi';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   const saveSpeaking = async () => {
     if (!mockId) return;
     try {
+      setError('');
       await api.post(`/api/cefr/mocks/${mockId}/speaking`, speaking);
       toast.success('Speaking saqlandi');
-    } catch (error) {
-      toast.error('Speaking saqlanmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Speaking saqlanmadi';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -347,6 +363,11 @@ export default function CreateCefrPage() {
 
           {/* Step Content */}
           <div className="glass-dark rounded-2xl p-4 lg:p-8">
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <p className="text-red-400 text-sm font-medium">{error}</p>
+              </div>
+            )}
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-white mb-6">Asosiy ma'lumotlar</h2>
