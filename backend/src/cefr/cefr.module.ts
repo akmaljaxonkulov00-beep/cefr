@@ -7,9 +7,10 @@ import { CefrPdfParserService } from './pdf-parser.service';
 import { PrismaModule } from '../common/prisma.module';
 import { AiModule } from '../ai/ai.module';
 import { StorageModule } from '../storage/storage.module';
+import { ManualPaymentsModule } from '../manual-payments/manual-payments.module';
 
 @Module({
-  imports: [PrismaModule, AiModule, StorageModule],
+  imports: [PrismaModule, AiModule, StorageModule, ManualPaymentsModule],
   controllers: [CefrController, CefrStudentController],
   providers: [CefrService, CefrStudentService, CefrPdfParserService],
   exports: [CefrService, CefrStudentService],
