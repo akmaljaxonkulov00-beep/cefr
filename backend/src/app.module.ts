@@ -21,6 +21,7 @@ import { MockPartsModule } from './mock-parts/mock-parts.module';
 import { MockPaymentsModule } from './mock-payments/mock-payments.module';
 import { IeltsModule } from './ielts/ielts.module';
 import { CefrModule } from './cefr/cefr.module';
+import { QuestionBankModule } from './question-bank/question-bank.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -46,6 +47,7 @@ import { HealthModule } from './health/health.module';
     MockPaymentsModule,
     IeltsModule,
     CefrModule,
+    QuestionBankModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

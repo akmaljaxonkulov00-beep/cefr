@@ -825,3 +825,24 @@ model CefrAttempt {
   @@index([userId, status])
   @@map("cefr_attempts")
 }
+
+model QuestionBank {
+  id          String   @id @default(uuid())
+  type        String   // 'speaking' | 'writing' | 'reading' | 'listening'
+  examType    String   // 'CEFR' | 'IELTS'
+  level       String?  // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' for CEFR, 'B1' | 'B2' | 'C1' | 'C2' for IELTS
+  title       String
+  content     Json     // Question/prompt data structure
+  mediaUrl    String?  // URL for audio/image files
+  mediaKey    String?  // Storage key for media files
+  difficulty  String?  // 'easy' | 'medium' | 'hard'
+  tags        String[] @default([])
+  isActive    Boolean  @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([type, examType, level])
+  @@index([isActive])
+  @@map("question_bank")
+}

@@ -54,6 +54,7 @@ export default function AISpeakingPage() {
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<SpeakingResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [examType, setExamType] = useState<'CEFR' | 'IELTS'>('CEFR');
   const mediaRecorder = useRef<MediaRecorder | null>(null);
 
   const startRecording = async () => {
@@ -94,6 +95,7 @@ export default function AISpeakingPage() {
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('examType', examType);
       const { data } = await api.post<SpeakingResult>('/api/ai/speaking', formData);
       setResult(data);
       setTranscript(data.transcript || '');
@@ -114,9 +116,33 @@ export default function AISpeakingPage() {
       <main className="flex-1 p-6 lg:p-8 max-w-6xl mx-auto w-full">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-white mb-2">AI speaking</h1>
-          <p className="text-gray-400 mb-8 text-sm md:text-base">
+          <p className="text-gray-400 mb-4 text-sm md:text-base">
             Groq Whisper transkripsiya + Groq LLM: talaffuz, ravonlik, pauzalar, CEFR (nutq) va o‘zbekcha fikr. Natijalar bazaga yoziladi.
           </p>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Imtihon Turi</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setExamType('CEFR')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  examType === 'CEFR' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                CEFR
+              </button>
+              <button
+                type="button"
+                onClick={() => setExamType('IELTS')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  examType === 'IELTS' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                IELTS
+              </button>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="glass-dark rounded-2xl p-8 text-center">

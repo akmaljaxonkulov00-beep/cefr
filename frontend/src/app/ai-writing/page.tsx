@@ -12,6 +12,7 @@ export default function AIWritingPage() {
   const [topic, setTopic] = useState('');
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [examType, setExamType] = useState<'CEFR' | 'IELTS'>('CEFR');
 
   const topics = [
     'Technology and Society',
@@ -26,7 +27,7 @@ export default function AIWritingPage() {
     if (!essay.trim()) return toast.error('Please write your essay');
     setLoading(true);
     try {
-      const { data } = await api.post('/api/ai/writing', { essay });
+      const { data } = await api.post('/api/ai/writing', { essay, examType });
       setResult(data);
       toast.success('Analysis complete!');
     } catch {
@@ -42,7 +43,31 @@ export default function AIWritingPage() {
       <main className="flex-1 p-6 lg:p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-white mb-2">AI Writing</h1>
-          <p className="text-gray-400 mb-8">Write an essay and get instant AI feedback on grammar, vocabulary, and coherence.</p>
+          <p className="text-gray-400 mb-4">Write an essay and get instant AI feedback on grammar, vocabulary, and coherence.</p>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Imtihon Turi</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setExamType('CEFR')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  examType === 'CEFR' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                CEFR
+              </button>
+              <button
+                type="button"
+                onClick={() => setExamType('IELTS')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  examType === 'IELTS' ? 'gradient-bg text-white' : 'glass text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                IELTS
+              </button>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>

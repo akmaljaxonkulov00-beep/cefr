@@ -552,37 +552,317 @@ function ReadingSection({ type, readingData, setReadingData }: any) {
 }
 
 function WritingSection({ type, writingData, setWritingData }: { type: string; writingData: any; setWritingData: any }) {
+  const [task1Prompt, setTask1Prompt] = useState('');
+  const [task2Prompt, setTask2Prompt] = useState('');
+  const [task1Image, setTask1Image] = useState('');
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const endpoint = type === 'IELTS' ? '/api/ielts/upload/image' : '/api/cefr/upload/image';
+      const { data } = await api.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setTask1Image(data.url);
+      toast.success('Rasm yuklandi');
+    } catch (error) {
+      toast.error('Rasm yuklanmadi');
+    }
+  };
+
+  const addTask = () => {
+    const newTask = {
+      prompt: type === 'IELTS' ? task1Prompt : task1Prompt,
+      instruction: type === 'IELTS' ? task2Prompt : '',
+      imageUrl: task1Image,
+      minWords: type === 'IELTS' ? 150 : 50,
+      part: type === 'IELTS' ? '1' : '1.1',
+    };
+
+    setWritingData({
+      ...writingData,
+      tasks: [...(writingData?.tasks || []), newTask]
+    });
+
+    setTask1Prompt('');
+    setTask2Prompt('');
+    setTask1Image('');
+  };
+
+  const removeTask = (index: number) => {
+    setWritingData({
+      ...writingData,
+      tasks: (writingData?.tasks || []).filter((_: any, i: number) => i !== index)
+    });
+  };
+
   return (
-    <div className="text-gray-400">
-      <p className="mb-4">
+    <div className="space-y-4">
+      <p className="text-gray-400 mb-4">
         {type === 'IELTS' 
           ? 'IELTS Writing: Task 1 (150 words) + Task 2 (250 words), 60 minutes'
           : 'CEFR Writing: Task 1.1, Task 1.2, Task 2, 80 minutes'
         }
       </p>
-      <div className="bg-white/5 rounded-xl p-6 text-center">
-        <Upload size={48} className="mx-auto mb-4 text-gray-600" />
-        <p>Bo'lim tarkibi hozircha ishlab chiqilmagan</p>
-        <p className="text-sm mt-2">Tez orada qo\'shiladi</p>
+
+      <div className="bg-white/5 rounded-xl p-6 space-y-4">
+        <h4 className="text-white font-medium">Yangi task qo'shish</h4>
+        
+        <div>
+          <label className="block text-gray-300 mb-2">Task prompt / Savol</label>
+          <textarea
+            value={task1Prompt}
+            onChange={(e) => setTask1Prompt(e.target.value)}
+            className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition min-h-[80px]"
+            placeholder="Task promptini kiriting..."
+          />
+        </div>
+
+        {type === 'IELTS' && (
+          <div>
+            <label className="block text-gray-300 mb-2">Task 2 prompt</label>
+            <textarea
+              value={task2Prompt}
+              onChange={(e) => setTask2Prompt(e.target.value)}
+              className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition min-h-[80px]"
+              placeholder="Task 2 promptini kiriting..."
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="block text-gray-300 mb-2">Rasm (ixtiyoriy)</label>
+          <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-primary-500 transition">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="writing-image-upload"
+            />
+            <label htmlFor="writing-image-upload" className="cursor-pointer">
+              {task1Image ? (
+                <img src={task1Image} alt="Task image" className="max-h-32 mx-auto rounded" />
+              ) : (
+                <>
+                  <Upload size={32} className="mx-auto mb-2 text-gray-500" />
+                  <p className="text-gray-400 text-sm">Rasm yuklash</p>
+                </>
+              )}
+            </label>
+          </div>
+        </div>
+
+        <button
+          onClick={addTask}
+          disabled={!task1Prompt}
+          className="flex items-center gap-2 px-4 py-2 gradient-bg text-white rounded-lg font-medium transition hover:opacity-90 disabled:opacity-50"
+        >
+          <Plus size={18} />
+          Task qo'shish
+        </button>
       </div>
+
+      {(writingData?.tasks || []).length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-white font-medium">Qo'shilgan tasklar:</h4>
+          {(writingData?.tasks || []).map((task: any, idx: number) => (
+            <div key={idx} className="bg-white/5 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-primary-400 font-medium">Task {task.part}</span>
+                <button
+                  onClick={() => removeTask(idx)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <p className="text-gray-300 text-sm">{task.prompt}</p>
+              {task.imageUrl && (
+                <img src={task.imageUrl} alt="Task" className="mt-2 max-h-20 rounded" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function SpeakingSection({ type, speakingData, setSpeakingData }: { type: string; speakingData: any; setSpeakingData: any }) {
+  const [partNumber, setPartNumber] = useState('1');
+  const [questionText, setQuestionText] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [prepTime, setPrepTime] = useState(30);
+  const [speakTime, setSpeakTime] = useState(120);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const endpoint = type === 'IELTS' ? '/api/ielts/upload/image' : '/api/cefr/upload/image';
+      const { data } = await api.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setImageUrl(data.url);
+      toast.success('Rasm yuklandi');
+    } catch (error) {
+      toast.error('Rasm yuklanmadi');
+    }
+  };
+
+  const addQuestion = () => {
+    const newPart = {
+      part: partNumber,
+      questions: [{ text: questionText }],
+      imageUrl: imageUrl,
+      prepTime: parseInt(prepTime.toString()) || 30,
+      speakTime: parseInt(speakTime.toString()) || 120,
+    };
+
+    setSpeakingData({
+      ...speakingData,
+      parts: [...(speakingData?.parts || []), newPart]
+    });
+
+    setQuestionText('');
+    setImageUrl('');
+    setPartNumber((parseInt(partNumber) + 1).toString());
+  };
+
+  const removePart = (index: number) => {
+    setSpeakingData({
+      ...speakingData,
+      parts: (speakingData?.parts || []).filter((_: any, i: number) => i !== index)
+    });
+  };
+
   return (
-    <div className="text-gray-400">
-      <p className="mb-4">
+    <div className="space-y-4">
+      <p className="text-gray-400 mb-4">
         {type === 'IELTS' 
           ? 'IELTS Speaking: 3 parts, 11-14 minutes'
           : 'CEFR Speaking: 3 tasks, ~15 minutes'
         }
       </p>
-      <div className="bg-white/5 rounded-xl p-6 text-center">
-        <Upload size={48} className="mx-auto mb-4 text-gray-600" />
-        <p>Bo'lim tarkibi hozircha ishlab chiqilmagan</p>
-        <p className="text-sm mt-2">Tez orada qo\'shiladi</p>
+
+      <div className="bg-white/5 rounded-xl p-6 space-y-4">
+        <h4 className="text-white font-medium">Yangi part qo'shish</h4>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-gray-300 mb-2">Part raqami</label>
+            <select
+              value={partNumber}
+              onChange={(e) => setPartNumber(e.target.value)}
+              className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+            >
+              <option value="1">Part 1</option>
+              <option value="2">Part 2</option>
+              <option value="3">Part 3</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-gray-300 mb-2">Tayyorlanish vaqti (sekund)</label>
+            <input
+              type="number"
+              value={prepTime}
+              onChange={(e) => setPrepTime(Number(e.target.value))}
+              className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+              placeholder="30"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-gray-300 mb-2">Gapirish vaqti (sekund)</label>
+          <input
+            type="number"
+            value={speakTime}
+            onChange={(e) => setSpeakTime(Number(e.target.value))}
+            className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+            placeholder="120"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-300 mb-2">Savol / Topic</label>
+          <textarea
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+            className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition min-h-[80px]"
+            placeholder="Savolni kiriting..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-300 mb-2">Rasm (ixtiyoriy)</label>
+          <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-primary-500 transition">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="speaking-image-upload"
+            />
+            <label htmlFor="speaking-image-upload" className="cursor-pointer">
+              {imageUrl ? (
+                <img src={imageUrl} alt="Speaking image" className="max-h-32 mx-auto rounded" />
+              ) : (
+                <>
+                  <Upload size={32} className="mx-auto mb-2 text-gray-500" />
+                  <p className="text-gray-400 text-sm">Rasm yuklash</p>
+                </>
+              )}
+            </label>
+          </div>
+        </div>
+
+        <button
+          onClick={addQuestion}
+          disabled={!questionText}
+          className="flex items-center gap-2 px-4 py-2 gradient-bg text-white rounded-lg font-medium transition hover:opacity-90 disabled:opacity-50"
+        >
+          <Plus size={18} />
+          Part qo'shish
+        </button>
       </div>
+
+      {(speakingData?.parts || []).length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-white font-medium">Qo'shilgan partlar:</h4>
+          {(speakingData?.parts || []).map((part: any, idx: number) => (
+            <div key={idx} className="bg-white/5 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-primary-400 font-medium">Part {part.part}</span>
+                <button
+                  onClick={() => removePart(idx)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <p className="text-gray-300 text-sm">{part.questions?.[0]?.text}</p>
+              {part.imageUrl && (
+                <img src={part.imageUrl} alt="Speaking" className="mt-2 max-h-20 rounded" />
+              )}
+              <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                <span>Prep: {part.prepTime}s</span>
+                <span>Speak: {part.speakTime}s</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
