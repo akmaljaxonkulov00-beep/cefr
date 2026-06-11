@@ -33,6 +33,27 @@ export class ManualPaymentsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
+  @Get('approved')
+  approved() {
+    return this.manualPayments.listApproved();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
+  @Get('rejected')
+  rejected() {
+    return this.manualPayments.listRejected();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
+  @Get('all')
+  all() {
+    return this.manualPayments.listAll();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   @Post(':id/approve')
   approve(@Param('id') id: string, @CurrentUser('id') reviewerId: string) {
     return this.manualPayments.approve(id, reviewerId);

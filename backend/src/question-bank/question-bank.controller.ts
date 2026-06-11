@@ -20,12 +20,11 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('question-bank')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'CENTER_ADMIN')
 export class QuestionBankController {
   constructor(private readonly questionBankService: QuestionBankService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(@Query() filters: {
     type?: 'speaking' | 'writing' | 'reading' | 'listening';
     examType?: 'CEFR' | 'IELTS';
@@ -37,11 +36,14 @@ export class QuestionBankController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string) {
     return this.questionBankService.findOne(id);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   async create(@Body() dto: any, @Request() req: any) {
     return this.questionBankService.create({
       ...dto,
@@ -50,6 +52,8 @@ export class QuestionBankController {
   }
 
   @Post('upload-media')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -68,16 +72,22 @@ export class QuestionBankController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   async update(@Param('id') id: string, @Body() dto: any) {
     return this.questionBankService.update(id, dto);
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   async toggleStatus(@Param('id') id: string) {
     return this.questionBankService.toggleStatus(id);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'CENTER_ADMIN')
   async delete(@Param('id') id: string) {
     return this.questionBankService.delete(id);
   }

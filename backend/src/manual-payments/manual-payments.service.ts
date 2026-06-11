@@ -82,6 +82,41 @@ export class ManualPaymentsService {
     });
   }
 
+  listApproved() {
+    return this.prisma.manualExamPayment.findMany({
+      where: { status: ManualPaymentStatus.APPROVED },
+      orderBy: { reviewedAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        exam: { select: { id: true, title: true, type: true, priceUzs: true } },
+        reviewer: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  listRejected() {
+    return this.prisma.manualExamPayment.findMany({
+      where: { status: ManualPaymentStatus.REJECTED },
+      orderBy: { reviewedAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        exam: { select: { id: true, title: true, type: true, priceUzs: true } },
+        reviewer: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  listAll() {
+    return this.prisma.manualExamPayment.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        exam: { select: { id: true, title: true, type: true, priceUzs: true } },
+        reviewer: { select: { id: true, name: true } },
+      },
+    });
+  }
+
   async approve(paymentId: string, reviewerId: string) {
     const payment = await this.prisma.manualExamPayment.findUnique({ where: { id: paymentId } });
     if (!payment) throw new NotFoundException('To‘lov topilmadi');
