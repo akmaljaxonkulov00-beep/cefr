@@ -25,7 +25,7 @@ export default function AIWritingPage() {
 
   const loadPrompts = async () => {
     try {
-      const { data } = await api.get('/question-bank', {
+      const { data } = await api.get('/api/question-bank', {
         params: { type: 'writing', examType, limit: 10 }
       });
       setPrompts(data);

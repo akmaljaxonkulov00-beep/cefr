@@ -69,7 +69,7 @@ export default function AISpeakingPage() {
 
   const loadQuestions = async () => {
     try {
-      const { data } = await api.get('/question-bank', {
+      const { data } = await api.get('/api/question-bank', {
         params: { type: 'speaking', examType, limit: 10 }
       });
       setQuestions(data);

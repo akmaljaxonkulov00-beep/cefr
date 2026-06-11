@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { AiQuestionsService } from './ai-questions.service';
 
-@Controller('api/ai-questions')
+@Controller('ai-questions')
 export class AiQuestionsController {
   constructor(private readonly aiQuestionsService: AiQuestionsService) {}
 

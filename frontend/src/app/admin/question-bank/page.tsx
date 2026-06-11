@@ -65,7 +65,7 @@ export default function QuestionBankPage() {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/question-bank');
+      const { data } = await api.get('/api/question-bank');
       setQuestions(data);
       setFilteredQuestions(data);
     } catch (error) {
@@ -79,7 +79,7 @@ export default function QuestionBankPage() {
     if (!confirm('Rostdan ham o\'chirmoqchimisiz?')) return;
 
     try {
-      await api.delete(`/question-bank/${id}`);
+      await api.delete(`/api/question-bank/${id}`);
       toast.success('Savol o\'chirildi');
       fetchQuestions();
     } catch (error) {
@@ -89,7 +89,7 @@ export default function QuestionBankPage() {
 
   const handleToggleStatus = async (id: string) => {
     try {
-      await api.patch(`/question-bank/${id}/status`);
+      await api.patch(`/api/question-bank/${id}/status`);
       toast.success('Holat o\'zgartirildi');
       fetchQuestions();
     } catch (error) {
@@ -116,7 +116,7 @@ export default function QuestionBankPage() {
 
         setLoading(true);
         for (const q of questions) {
-          await api.post('/question-bank', q);
+          await api.post('/api/question-bank', q);
         }
         toast.success(`${questions.length} ta savol muvaffaqiyatli qo\'shildi`);
         fetchQuestions();
@@ -366,10 +366,10 @@ function QuestionModal({ question, onClose, onSave }: { question: Question | nul
 
     try {
       if (question) {
-        await api.patch(`/question-bank/${question.id}`, formData);
+        await api.patch(`/api/question-bank/${question.id}`, formData);
         toast.success('Savol yangilandi');
       } else {
-        await api.post('/question-bank', formData);
+        await api.post('/api/question-bank', formData);
         toast.success('Savol qo\'shildi');
       }
       onSave();

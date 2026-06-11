@@ -11,10 +11,9 @@ interface SpeakingQuestion {
   id: string;
   part: number;
   cefrLevel: string;
-  question: string;
-  imageUrl?: string;
-  prepTime: number;
-  speakTime: number;
+  questionText: string;
+  topicCard?: string;
+  timeLimitSeconds: number;
   isActive: boolean;
 }
 
@@ -54,7 +53,7 @@ export default function AiSpeakingPage() {
       setQuestions(data);
       if (data.length > 0) {
         setCurrentQuestionIndex(0);
-        setTimeLeft(data[0].prepTime);
+        setTimeLeft(30); // default 30s prep time
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Savollar yuklab olinmadi');
@@ -65,14 +64,14 @@ export default function AiSpeakingPage() {
 
   const startPrep = () => {
     setPhase('prep');
-    setTimeLeft(questions[currentQuestionIndex].prepTime);
+    setTimeLeft(30);
     setAudioUrl(null);
     setAiFeedback(null);
   };
 
   const startSpeaking = () => {
     setPhase('speaking');
-    setTimeLeft(questions[currentQuestionIndex].speakTime);
+    setTimeLeft(questions[currentQuestionIndex].timeLimitSeconds || 60);
     startRecording();
   };
 
@@ -111,13 +110,19 @@ export default function AiSpeakingPage() {
     setAnalyzing(true);
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob);
-      formData.append('questionId', questions[currentQuestionIndex].id);
+      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('examType', 'CEFR');
 
-      const { data } = await api.post('/api/ai-questions/speaking/analyze', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const { data } = await api.post('/api/ai/speaking', formData);
+      setAiFeedback({
+        fluency: data.fluencyScore,
+        vocabulary: data.grammarScore,
+        grammar: data.grammarScore,
+        pronunciation: data.pronunciationScore,
+        overallScore: data.overallScore,
+        feedback: data.feedback,
+        suggestions: [],
       });
-      setAiFeedback(data);
       setPhase('result');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Tahlil qilishda xatolik');
@@ -204,15 +209,11 @@ export default function AiSpeakingPage() {
               </span>
             </div>
 
-            <h2 className="text-xl font-semibold text-white mb-4">{currentQuestion.question}</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{currentQuestion.questionText}</h2>
 
-            {currentQuestion.imageUrl && (
-              <div className="mb-4">
-                <img
-                  src={currentQuestion.imageUrl}
-                  alt="Question image"
-                  className="max-w-full h-auto rounded-lg"
-                />
+            {currentQuestion.topicCard && (
+              <div className="mb-4 p-4 bg-white/5 rounded-lg">
+                <p className="text-gray-300 text-sm whitespace-pre-wrap">{currentQuestion.topicCard}</p>
               </div>
             )}
 
