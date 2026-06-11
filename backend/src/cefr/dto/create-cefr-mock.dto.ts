@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, IsEnum, IsBoolean, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsEnum, IsBoolean, IsNumber, IsObject } from 'class-validator';
 
 export class CreateCefrMockDto {
   @IsString()
@@ -22,4 +22,33 @@ export class CreateCefrMockDto {
   @IsOptional()
   @IsBoolean()
   isPaid?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  sections?: {
+    listening?: {
+      title?: string;
+      audioKey?: string;
+      audioUrl?: string;
+      duration?: number;
+      parts?: any[];
+    };
+    reading?: {
+      title?: string;
+      pdfKey?: string;
+      pdfUrl?: string;
+      duration?: number;
+      passages?: any[];
+    };
+    writing?: {
+      title?: string;
+      duration?: number;
+      tasks?: any[];
+    };
+    speaking?: {
+      title?: string;
+      duration?: number;
+      parts?: any[];
+    };
+  };
 }
