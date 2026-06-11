@@ -116,7 +116,7 @@ export class IeltsController {
     const saved = await this.storageService.saveListeningAudio(file.buffer, file.mimetype, file.originalname);
     return {
       success: true,
-      key: saved.filename,
+      key: saved.storageKey,
       url: saved.publicUrl,
       filename: saved.filename
     };
@@ -173,14 +173,13 @@ export class IeltsController {
     }
 
     try {
-      // Upload to storage instead of parsing
-      const fileName = `ielts-pdf-${Date.now()}-${file.originalname}`;
-      const result = await this.storageService.uploadFile(file.buffer, fileName, 'application/pdf');
+      // Upload PDF using storage service
+      const result = await this.storageService.saveReadingFile(file.buffer, 'application/pdf', file.originalname);
 
       return {
         success: true,
-        key: result.key,
-        url: result.url,
+        key: result.storageKey,
+        url: result.publicUrl,
         fileName: file.originalname,
       };
     } catch (error: any) {
