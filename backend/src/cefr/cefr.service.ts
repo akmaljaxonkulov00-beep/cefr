@@ -12,18 +12,77 @@ import {
 export class CefrService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createMock(dto: CreateCefrMockDto, userId: string) {
-    return this.prisma.cefrMock.create({
+  async createMock(dto: any, userId: string) {
+    // Extract sections from dto
+    const { sections, ...mockData } = dto;
+    
+    // Create mock with basic data
+    const mock = await this.prisma.cefrMock.create({
       data: {
-        title: dto.title,
-        level: dto.level,
-        description: dto.description,
-        duration: dto.duration || 120,
-        price: dto.price || 0,
-        isPaid: dto.isPaid || false,
-        status: 'draft',
+        title: mockData.title,
+        level: mockData.level,
+        description: mockData.description,
+        duration: mockData.duration || 120,
+        price: mockData.price || 0,
+        isPaid: mockData.isPaid || false,
+        status: 'published', // Auto-publish uploaded mocks
       },
     });
+
+    // Create sections if provided
+    if (sections) {
+      // Listening section
+      if (sections.listening) {
+        await this.prisma.cefrListening.create({
+          data: {
+            mockId: mock.id,
+            title: sections.listening.title || 'Listening Section',
+            audioKey: sections.listening.audioKey,
+            audioUrl: sections.listening.audioUrl,
+            duration: sections.listening.duration || 40,
+          },
+        });
+      }
+
+      // Reading section
+      if (sections.reading) {
+        await this.prisma.cefrReading.create({
+          data: {
+            mockId: mock.id,
+            title: sections.reading.title || 'Reading Section',
+            pdfKey: sections.reading.pdfKey,
+            pdfUrl: sections.reading.pdfUrl,
+            duration: sections.reading.duration || 60,
+          },
+        });
+      }
+
+      // Writing section
+      if (sections.writing) {
+        await this.prisma.cefrWriting.create({
+          data: {
+            mockId: mock.id,
+            title: sections.writing.title || 'Writing Section',
+            duration: sections.writing.duration || 40,
+            tasks: sections.writing.tasks || [],
+          },
+        });
+      }
+
+      // Speaking section
+      if (sections.speaking) {
+        await this.prisma.cefrSpeaking.create({
+          data: {
+            mockId: mock.id,
+            title: sections.speaking.title || 'Speaking Section',
+            duration: sections.speaking.duration || 40,
+            parts: sections.speaking.parts || [],
+          },
+        });
+      }
+    }
+
+    return mock;
   }
 
   async getAllMocks(level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2', status?: 'draft' | 'published') {
