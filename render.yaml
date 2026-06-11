@@ -1,11 +1,12 @@
 services:
+  # Backend API Service
   - type: web
     name: mock-cefr-backend
-    runtime: node
-    rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
-    plan: free
+    runtime: docker
+    region: singapore
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -13,15 +14,44 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: GROQ_CHAT_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_STT_MODEL
+        value: whisper-large-v3-turbo
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: audio
       - key: FRONTEND_URL
-        sync: false
+        value: https://cefr-six.vercel.app
       - key: PORT
         value: 4000
+      - key: MAX_SPEAKING_AUDIO_BYTES
+        value: 20971520
       - key: NODE_ENV
         value: production
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Frontend Next.js Service
+  - type: web
+    name: mock-cefr-frontend
+    runtime: node
+    region: singapore
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: mock-cefr-backend
+          property: host
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true
