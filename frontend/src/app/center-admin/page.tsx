@@ -30,7 +30,7 @@ export default function CenterAdminDashboard() {
     try {
       const [studentsRes, resultsRes, revenueRes, participationRes, examsRes, centerRes] = await Promise.all([
         api.get('/api/users/center-students'),
-        api.get('/api/results/center'),
+        api.get('/api/exams/results/center'),
         api.get('/api/reports/revenue'),
         api.get('/api/reports/participation'),
         api.get('/api/exams'),

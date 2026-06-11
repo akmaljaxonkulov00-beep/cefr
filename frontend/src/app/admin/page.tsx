@@ -71,7 +71,7 @@ export default function AdminPage() {
 
   const loadPricing = useCallback(async () => {
     try {
-      const { data } = await api.get('/api/settings');
+      const { data } = await api.get('/api/admin/settings/pricing');
       setPrices(data);
     } catch {
       toast.error('Narxlar yuklanmadi');
@@ -90,7 +90,7 @@ export default function AdminPage() {
 
   const approvePayment = async (id: string) => {
     try {
-      await api.post(`/manual-payments/${id}/approve`);
+      await api.post(`/api/manual-payments/${id}/approve`);
       toast.success('Tasdiqlandi');
       loadPayments();
     } catch (e: any) {
@@ -101,7 +101,7 @@ export default function AdminPage() {
   const rejectPayment = async (id: string) => {
     const reason = window.prompt('Rad etish sababi') || 'Rad etildi';
     try {
-      await api.post(`/manual-payments/${id}/reject`, { reason });
+      await api.post(`/api/manual-payments/${id}/reject`, { reason });
       toast.success('Rad etildi');
       loadPayments();
     } catch (e: any) {
@@ -170,7 +170,7 @@ export default function AdminPage() {
 
   const updatePrice = async (key: string, value: number) => {
     try {
-      await api.put('/api/settings', { key: `examPrices.${key}`, value });
+      await api.patch('/api/admin/settings/pricing', { key: `examPrices.${key}`, value });
       toast.success('Narx yangilandi');
       loadPricing();
     } catch (e: any) {

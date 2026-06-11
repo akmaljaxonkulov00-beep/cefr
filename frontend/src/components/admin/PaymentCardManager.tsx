@@ -65,7 +65,7 @@ export default function PaymentCardManager() {
   const handleDelete = async (id: string) => {
     if (!confirm('Rostdan ham bu kartani o\'chirmoqchimisiz?')) return;
     try {
-      await api.delete(`/admin/settings/payment-cards/${id}`);
+      await api.delete(`/api/admin/settings/payment-cards/${id}`);
       toast.success('Karta o\'chirildi');
       fetchCards();
     } catch (error) {
@@ -87,7 +87,7 @@ export default function PaymentCardManager() {
 
   const handleToggleActive = async (card: PaymentCard) => {
     try {
-      await api.patch(`/admin/settings/payment-cards/${card.id}`, { isActive: !card.isActive });
+      await api.patch(`/api/admin/settings/payment-cards/${card.id}`, { isActive: !card.isActive });
       toast.success('Karta holati yangilandi');
       fetchCards();
     } catch (error) {

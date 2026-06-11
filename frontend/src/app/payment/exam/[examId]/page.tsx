@@ -36,10 +36,11 @@ export default function ExamPaymentPage() {
         setPaymentInstructions(center.paymentInstructions || '');
         setCenterName(center.name);
       } else {
-        const { data: settings } = await api.get('/api/admin/settings');
-        setPaymentInstructions(settings.paymentInstructions || '');
+        // For non-center users, get exam payment instructions
+        const { data: exam } = await api.get(`/api/exams/${examId}`);
+        setPaymentInstructions(exam.paymentInstructions || 'To\'lov qilish uchun quyidagi karta raqamiga pul o\'tkazing va chek rasmini yuklang.');
       }
-      const { data: card } = await api.get('/api/admin/settings/payment-cards/active');
+      const { data: card } = await api.get('/api/settings/payment-cards/active');
       setActiveCard(card);
     } catch (error) {
       console.error('Failed to fetch payment instructions');

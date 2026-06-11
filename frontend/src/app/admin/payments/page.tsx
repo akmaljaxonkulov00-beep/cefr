@@ -20,10 +20,10 @@ export default function AdminPayments() {
 
   const fetchPayments = async () => {
     try {
-      let endpoint = '/manual-payments/pending';
-      if (activeTab === 'approved') endpoint = '/manual-payments/approved';
-      else if (activeTab === 'rejected') endpoint = '/manual-payments/rejected';
-      else if (activeTab === 'all') endpoint = '/manual-payments/all';
+      let endpoint = '/api/manual-payments/pending';
+      if (activeTab === 'approved') endpoint = '/api/manual-payments/approved';
+      else if (activeTab === 'rejected') endpoint = '/api/manual-payments/rejected';
+      else if (activeTab === 'all') endpoint = '/api/manual-payments/all';
       
       const { data } = await api.get(endpoint);
       setPayments(data);
@@ -36,7 +36,7 @@ export default function AdminPayments() {
 
   const approvePayment = async (id: string) => {
     try {
-      await api.post(`/manual-payments/${id}/approve`);
+      await api.post(`/api/manual-payments/${id}/approve`);
       toast.success('Tasdiqlandi');
       fetchPayments();
     } catch (e: any) {
@@ -47,7 +47,7 @@ export default function AdminPayments() {
   const rejectPayment = async (id: string) => {
     const reason = window.prompt('Rad etish sababi') || 'Rad etildi';
     try {
-      await api.post(`/manual-payments/${id}/reject`, { reason });
+      await api.post(`/api/manual-payments/${id}/reject`, { reason });
       toast.success('Rad etildi');
       fetchPayments();
     } catch (e: any) {
@@ -57,7 +57,7 @@ export default function AdminPayments() {
 
   const aiCheckPayment = async (id: string) => {
     try {
-      const { data } = await api.post(`/manual-payments/${id}/ai-verify`);
+      const { data } = await api.post(`/api/manual-payments/${id}/ai-verify`);
       toast.success(data.action === 'approved' ? 'AI tasdiqladi' : 'AI rad etildi: ' + data.reason);
       fetchPayments();
     } catch (e: any) {

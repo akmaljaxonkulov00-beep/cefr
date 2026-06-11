@@ -143,7 +143,7 @@ export default function PaymentCheckUpload({ mockPartId, amount, mockTitle, onSu
         <FileUploadBox
           accept=".jpg,.jpeg,.png"
           maxSizeMB={5}
-          uploadUrl="/uploads/payment-proof"
+          uploadUrl="/api/uploads/payment-proof"
           label="Chek rasmini yuklang"
           onSuccess={handleFileUploadSuccess}
           onRemove={() => setCheckImageUrl(null)}

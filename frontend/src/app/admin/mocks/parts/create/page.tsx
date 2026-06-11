@@ -379,7 +379,7 @@ function Step2({ formData, contentType, setContentType, passageText, setPassageT
                 <FileUploadBox
                   accept=".pdf,.doc,.docx,.txt"
                   maxSizeMB={20}
-                  uploadUrl="/uploads/reading-file"
+                  uploadUrl="/api/uploads/reading-file"
                   label="Matn faylini yuklash"
                   onSuccess={(result) => handleFileUploadSuccess(result, 'reading')}
                   onRemove={() => setPassageFile(null)}
@@ -425,7 +425,7 @@ function Step2({ formData, contentType, setContentType, passageText, setPassageT
               <FileUploadBox
                 accept=".pdf,.doc,.docx,.txt"
                 maxSizeMB={20}
-                uploadUrl="/uploads/reading-file"
+                uploadUrl="/api/uploads/reading-file"
                 label="Matn faylini yuklash"
                 onSuccess={(result) => handleFileUploadSuccess(result, 'reading')}
                 onRemove={() => setPassageFile(null)}
@@ -451,7 +451,7 @@ function Step2({ formData, contentType, setContentType, passageText, setPassageT
           <FileUploadBox
             accept=".mp3,.wav,.m4a"
             maxSizeMB={50}
-            uploadUrl="/uploads/audio"
+            uploadUrl="/api/uploads/audio"
             label="Audio faylini yuklash"
             onSuccess={(result) => handleFileUploadSuccess(result, 'audio')}
             onRemove={() => setAudioFile(null)}
