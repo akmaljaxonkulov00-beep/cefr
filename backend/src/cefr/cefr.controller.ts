@@ -115,6 +115,8 @@ export class CefrController {
     }
     const saved = await this.storageService.saveListeningAudio(file.buffer, file.mimetype, file.originalname);
     return {
+      success: true,
+      key: saved.storageKey,
       url: saved.publicUrl,
       filename: saved.filename
     };
@@ -170,8 +172,26 @@ export class CefrController {
       throw new BadRequestException('Fayl yuklanmadi');
     }
     try {
-      const parsed = await this.pdfParserService.parseCefrMock(file.buffer);
-      return { success: true, filename: file.originalname, parsed };
+      // Simple file save without parsing PDF
+      const fileName = `cefr-pdf-${Date.now()}-${file.originalname}`;
+      const storageKey = `reading/${fileName}`;
+      const publicUrl = `/uploads/${storageKey}`;
+      
+      // Save file to disk
+      const fs = require('fs/promises');
+      const path = require('path');
+      const uploadRoot = process.env.UPLOAD_ROOT || path.join(process.cwd(), 'uploads');
+      const fullPath = path.join(uploadRoot, storageKey);
+      
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, file.buffer);
+
+      return {
+        success: true,
+        key: storageKey,
+        url: publicUrl,
+        fileName: file.originalname,
+      };
     } catch (error: any) {
       return {
         success: false,
