@@ -115,6 +115,8 @@ export class IeltsController {
     }
     const saved = await this.storageService.saveListeningAudio(file.buffer, file.mimetype, file.originalname);
     return {
+      success: true,
+      key: saved.filename,
       url: saved.publicUrl,
       filename: saved.filename
     };
@@ -165,17 +167,20 @@ export class IeltsController {
     },
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
   }))
-  async uploadPdf(@UploadedFile() file: Express.Multer.File): Promise<{ success: boolean; data: ParsedMock; fileName: string }> {
+  async uploadPdf(@UploadedFile() file: Express.Multer.File) {
     if (!file || !file.buffer) {
       throw new Error('Fayl yuklanmadi');
     }
 
     try {
-      const parsedData = await this.pdfParserService.parseIeltsMock(file.buffer);
+      // Upload to storage instead of parsing
+      const fileName = `ielts-pdf-${Date.now()}-${file.originalname}`;
+      const result = await this.storageService.uploadFile(file.buffer, fileName, 'application/pdf');
 
       return {
         success: true,
-        data: parsedData,
+        key: result.key,
+        url: result.url,
         fileName: file.originalname,
       };
     } catch (error: any) {
