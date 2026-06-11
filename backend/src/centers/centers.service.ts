@@ -19,6 +19,17 @@ export class CentersService {
     });
   }
 
+  async findOne(id: string) {
+    return this.prisma.center.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { users: true }
+        }
+      }
+    });
+  }
+
   async create(dto: { name: string; address?: string; mockLimit?: number; adminEmail?: string; adminPassword?: string }) {
     return this.prisma.center.create({ 
       data: {

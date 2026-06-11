@@ -13,6 +13,11 @@ export class CentersController {
     return this.centersService.findAll();
   }
 
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return this.centersService.findOne(id);
+  }
+
   @Get(':id/limit')
   async getCenterLimit(@Param('id') id: string) {
     const center = await this.centersService.getCenterLimit(id);
