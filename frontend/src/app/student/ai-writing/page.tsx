@@ -48,7 +48,7 @@ export default function AiWritingPage() {
         setTimeLeft(prev => {
           if (prev <= 1) {
             // ✅ Vaqt tugaganda MAJBURIY yuborish
-            toast.info('⏰ Vaqt tugadi! Avtomatik yuborilmoqda...');
+            toast('⏰ Vaqt tugadi! Avtomatik yuborilmoqda...', { icon: '⏰' });
             setTimeout(() => {
               handleSubmit();
             }, 1000);
@@ -210,8 +210,8 @@ export default function AiWritingPage() {
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   
-  const getAvgScore = () => {
-    if (allResults.length === 0) return 0;
+  const getAvgScore = (): string => {
+    if (allResults.length === 0) return '0';
     const sum = allResults.reduce((acc, r) => acc + r.feedback.overallScore, 0);
     return (sum / allResults.length).toFixed(2);
   };
