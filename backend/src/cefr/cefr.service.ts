@@ -31,52 +31,60 @@ export class CefrService {
 
     // Create sections if provided
     if (sections) {
-      // Listening section
+      // Listening section - store audio info in sections JSON
       if (sections.listening) {
         await this.prisma.cefrListening.create({
           data: {
             mockId: mock.id,
-            title: sections.listening.title || 'Listening Section',
-            audioKey: sections.listening.audioKey,
-            audioUrl: sections.listening.audioUrl,
             duration: sections.listening.duration || 40,
+            sections: {
+              audioKey: sections.listening.audioKey,
+              audioUrl: sections.listening.audioUrl,
+              parts: sections.listening.parts || []
+            },
           },
         });
       }
 
-      // Reading section
+      // Reading section - store PDF info in passages JSON
       if (sections.reading) {
         await this.prisma.cefrReading.create({
           data: {
             mockId: mock.id,
-            title: sections.reading.title || 'Reading Section',
-            pdfKey: sections.reading.pdfKey,
-            pdfUrl: sections.reading.pdfUrl,
             duration: sections.reading.duration || 60,
+            passages: {
+              pdfKey: sections.reading.pdfKey,
+              pdfUrl: sections.reading.pdfUrl,
+              passages: sections.reading.passages || []
+            },
           },
         });
       }
 
       // Writing section
       if (sections.writing) {
+        const tasks = sections.writing.tasks || [];
         await this.prisma.cefrWriting.create({
           data: {
             mockId: mock.id,
-            title: sections.writing.title || 'Writing Section',
-            duration: sections.writing.duration || 40,
-            tasks: sections.writing.tasks || [],
+            duration: sections.writing.duration || 80,
+            task11: tasks[0] || { prompt: 'Writing Task 1.1', minWords: 150 },
+            task12: tasks[1] || { prompt: 'Writing Task 1.2', minWords: 150 },
+            task2: tasks[2] || { prompt: 'Writing Task 2', minWords: 250 },
           },
         });
       }
 
       // Speaking section
       if (sections.speaking) {
+        const parts = sections.speaking.parts || [];
         await this.prisma.cefrSpeaking.create({
           data: {
             mockId: mock.id,
-            title: sections.speaking.title || 'Speaking Section',
-            duration: sections.speaking.duration || 40,
-            parts: sections.speaking.parts || [],
+            duration: sections.speaking.duration || 15,
+            task1: parts[0] || { questions: [] },
+            task2: parts[1] || { topic: 'Speaking Task 2', prepTime: 60, speakTime: 120 },
+            task3: parts[2] || { questions: [] },
           },
         });
       }
