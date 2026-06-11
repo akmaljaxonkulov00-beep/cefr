@@ -63,8 +63,9 @@ export default function AdminIeltsPage() {
       const { data } = await api.get('/api/ielts/mocks', { params });
       setMocks(data);
       setFilteredMocks(data);
-    } catch (error) {
-      toast.error('IELTS mocklar yuklab olinmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'IELTS mocklar yuklab olinmadi';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -77,8 +78,9 @@ export default function AdminIeltsPage() {
       await api.delete(`/api/ielts/mocks/${id}`);
       toast.success('IELTS mock o\'chirildi');
       fetchMocks();
-    } catch (error) {
-      toast.error('IELTS mock o\'chirilmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'IELTS mock o\'chirilmadi';
+      toast.error(errorMessage);
     }
   };
 
@@ -87,8 +89,9 @@ export default function AdminIeltsPage() {
       await api.patch(`/api/ielts/mocks/${id}/status`);
       toast.success('IELTS mock holati yangilandi');
       fetchMocks();
-    } catch (error) {
-      toast.error('IELTS mock holatini o\'zgartirib bo\'lmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'IELTS mock holatini o\'zgartirib bo\'lmadi';
+      toast.error(errorMessage);
     }
   };
 

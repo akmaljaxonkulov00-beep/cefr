@@ -26,6 +26,8 @@ export default function CreateMockPage() {
     status: 'DRAFT' as 'DRAFT' | 'ACTIVE',
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Step 2: Sections
   const [activeTab, setActiveTab] = useState<'listening' | 'reading' | 'writing' | 'speaking'>('listening');
   const [listeningData, setListeningData] = useState({ recordings: [] });
@@ -72,7 +74,20 @@ export default function CreateMockPage() {
   };
 
   const handleSaveDraft = async () => {
+    // Validation
+    const newErrors: Record<string, string> = {};
+    if (!formData.title.trim()) newErrors.title = 'Nom kiritilishi shart';
+    if (!formData.priceUzs) newErrors.priceUzs = 'Narx kiritilishi shart';
+    if (formData.priceUzs && parseInt(formData.priceUzs) < 0) newErrors.priceUzs = 'Narx manfiy bo\'lishi mumkin emas';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error('Iltimos, barcha majburiy maydonlarni to\'ldiring');
+      return;
+    }
+
     setSaving(true);
+    setErrors({});
     try {
       const payload = {
         ...formData,
@@ -87,15 +102,29 @@ export default function CreateMockPage() {
         toast.success('Mock yaratildi');
         router.push(`/admin/mocks/${data.id}/edit`);
       }
-    } catch (error) {
-      toast.error('Xatolik yuz berdi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Xatolik yuz berdi';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
   };
 
   const handlePublish = async () => {
+    // Validation
+    const newErrors: Record<string, string> = {};
+    if (!formData.title.trim()) newErrors.title = 'Nom kiritilishi shart';
+    if (!formData.priceUzs) newErrors.priceUzs = 'Narx kiritilishi shart';
+    if (formData.priceUzs && parseInt(formData.priceUzs) < 0) newErrors.priceUzs = 'Narx manfiy bo\'lishi mumkin emas';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error('Iltimos, barcha majburiy maydonlarni to\'ldiring');
+      return;
+    }
+
     setSaving(true);
+    setErrors({});
     try {
       const payload = {
         ...formData,
@@ -110,8 +139,9 @@ export default function CreateMockPage() {
         toast.success('Mock yaratildi va nashr qilindi');
         router.push(`/admin/mocks/${data.id}/edit`);
       }
-    } catch (error) {
-      toast.error('Xatolik yuz berdi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Xatolik yuz berdi';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -170,6 +200,8 @@ export default function CreateMockPage() {
               formData={formData}
               setFormData={setFormData}
               onNext={handleNext}
+              errors={errors}
+              setErrors={setErrors}
             />
           )}
 
@@ -216,7 +248,7 @@ export default function CreateMockPage() {
   );
 }
 
-function Step1({ formData, setFormData, onNext }: any) {
+function Step1({ formData, setFormData, onNext, errors }: any) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-white mb-6">1. Asosiy ma'lumot</h2>
@@ -227,9 +259,12 @@ function Step1({ formData, setFormData, onNext }: any) {
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+          className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition ${
+            errors.title ? 'border-red-500 focus:border-red-500' : 'border-gray-700 focus:border-primary-500'
+          }`}
           placeholder="Mock nomi"
         />
+        {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title}</p>}
       </div>
 
       <div>
@@ -268,9 +303,12 @@ function Step1({ formData, setFormData, onNext }: any) {
           type="number"
           value={formData.priceUzs}
           onChange={(e) => setFormData({ ...formData, priceUzs: e.target.value })}
-          className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 transition"
+          className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition ${
+            errors.priceUzs ? 'border-red-500 focus:border-red-500' : 'border-gray-700 focus:border-primary-500'
+          }`}
           placeholder="50000"
         />
+        {errors.priceUzs && <p className="text-red-400 text-sm mt-1">{errors.priceUzs}</p>}
       </div>
 
       <div>
@@ -1001,15 +1039,16 @@ function Step4({ formData, certificate, onSaveDraft, onPublish, onBack, saving }
             disabled={saving}
             className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white rounded-xl font-semibold transition hover:bg-gray-600 disabled:opacity-50"
           >
-            <Save size={20} />
-            Draft saqlash
+            {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={20} />}
+            {saving ? 'Saqlanmoqda...' : 'Draft saqlash'}
           </button>
           <button
             onClick={onPublish}
             disabled={saving}
             className="flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50"
           >
-            Nashr qilish
+            {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+            {saving ? 'Nashr qilinmoqda...' : 'Nashr qilish'}
           </button>
         </div>
       </div>

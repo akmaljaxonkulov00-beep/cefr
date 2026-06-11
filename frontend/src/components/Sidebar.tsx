@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Mic, PenLine, BarChart3, Trophy, Route, LogOut, Menu, X, Bell, LineChart, UserCircle } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Mic, PenLine, BarChart3, Trophy, Route, LogOut, Menu, X, Bell, LineChart, UserCircle, Cpu } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -11,6 +11,7 @@ const getNavItems = (role: string | undefined) => {
     return [
       { href: '/admin', icon: LayoutDashboard, label: 'Admin Panel' },
       { href: '/admin/mocks', icon: BookOpen, label: 'Mocklar' },
+      { href: '/admin/ai-questions', icon: Cpu, label: 'AI Savollar' },
       { href: '/admin/ielts', icon: BookOpen, label: 'IELTS Mocklar' },
       { href: '/admin/cefr', icon: BookOpen, label: 'CEFR Mocklar' },
       { href: '/admin/centers', icon: BookOpen, label: 'Markazlar' },

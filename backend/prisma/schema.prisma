@@ -846,3 +846,50 @@ model QuestionBank {
   @@index([isActive])
   @@map("question_bank")
 }
+
+model AiSpeakingQuestion {
+  id               String   @id @default(uuid())
+  part             Int      // 1, 2, or 3
+  cefrLevel        String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  questionText     String   @db.Text
+  topicCard        String?  @db.Text // For Part 2
+  timeLimitSeconds Int      @default(60)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([part, cefrLevel])
+  @@index([isActive])
+  @@map("ai_speaking_questions")
+}
+
+model AiWritingQuestion {
+  id            String   @id @default(uuid())
+  task          Int      // 1 or 2
+  cefrLevel     String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  promptText    String   @db.Text
+  minWords      Int      @default(150)
+  maxWords      Int      @default(300)
+  sampleAnswer  String?  @db.Text
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([task, cefrLevel])
+  @@index([isActive])
+  @@map("ai_writing_questions")
+}
+
+model PaymentRequest {
+  id              String   @id @default(uuid())
+  userId          String
+  fileUrl         String
+  status          String   @default("pending") // 'pending' | 'approved' | 'rejected'
+  rejectionReason String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  reviewedAt      DateTime?
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("payment_requests")
+}

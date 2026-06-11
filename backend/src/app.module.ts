@@ -23,6 +23,7 @@ import { IeltsModule } from './ielts/ielts.module';
 import { CefrModule } from './cefr/cefr.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
 import { HealthModule } from './health/health.module';
+import { AiQuestionsModule } from './ai-questions/ai-questions.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { HealthModule } from './health/health.module';
     CefrModule,
     QuestionBankModule,
     HealthModule,
+    AiQuestionsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -60,8 +60,9 @@ export default function AdminCefrPage() {
       const { data } = await api.get('/api/cefr/mocks', { params });
       setMocks(data);
       setFilteredMocks(data);
-    } catch (error) {
-      toast.error('CEFR mocklar yuklab olinmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'CEFR mocklar yuklab olinmadi';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,8 +75,9 @@ export default function AdminCefrPage() {
       await api.delete(`/api/cefr/mocks/${id}`);
       toast.success('CEFR mock o\'chirildi');
       fetchMocks();
-    } catch (error) {
-      toast.error('CEFR mock o\'chirilmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'CEFR mock o\'chirilmadi';
+      toast.error(errorMessage);
     }
   };
 
@@ -84,8 +86,9 @@ export default function AdminCefrPage() {
       await api.patch(`/api/cefr/mocks/${id}/status`);
       toast.success('CEFR mock holati yangilandi');
       fetchMocks();
-    } catch (error) {
-      toast.error('CEFR mock holatini o\'zgartirib bo\'lmadi');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'CEFR mock holatini o\'zgartirib bo\'lmadi';
+      toast.error(errorMessage);
     }
   };
 
