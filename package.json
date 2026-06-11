@@ -1,6 +1,13 @@
 {
+  "name": "cefr-api-test",
+  "version": "1.0.0",
+  "description": "API test suite for CEFR platform",
+  "main": "test-api.js",
+  "scripts": {
+    "test": "node test-api.js"
+  },
   "dependencies": {
-    "@types/multer": "^2.1.0",
-    "multer": "^2.1.1"
+    "axios": "^1.6.0",
+    "form-data": "^4.0.5"
   }
 }
