@@ -173,13 +173,24 @@ export class IeltsController {
     }
 
     try {
-      // Upload PDF using storage service
-      const result = await this.storageService.saveReadingFile(file.buffer, 'application/pdf', file.originalname);
+      // Simple file save without parsing PDF
+      const fileName = `ielts-pdf-${Date.now()}-${file.originalname}`;
+      const storageKey = `reading/${fileName}`;
+      const publicUrl = `/uploads/${storageKey}`;
+      
+      // Save file to disk
+      const fs = require('fs/promises');
+      const path = require('path');
+      const uploadRoot = process.env.UPLOAD_ROOT || path.join(process.cwd(), 'uploads');
+      const fullPath = path.join(uploadRoot, storageKey);
+      
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, file.buffer);
 
       return {
         success: true,
-        key: result.storageKey,
-        url: result.publicUrl,
+        key: storageKey,
+        url: publicUrl,
         fileName: file.originalname,
       };
     } catch (error: any) {
