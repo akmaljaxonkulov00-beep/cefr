@@ -18,6 +18,22 @@ export class AiQuestionsService {
     });
   }
 
+  async getRandomSpeakingQuestion(part?: number, cefrLevel?: string) {
+    const where: any = { isActive: true };
+    if (part) where.part = part;
+    if (cefrLevel) where.cefrLevel = cefrLevel;
+
+    const questions = await this.prisma.aiSpeakingQuestion.findMany({ where });
+    
+    if (questions.length === 0) {
+      throw new NotFoundException('Faol savollar topilmadi');
+    }
+
+    // Random question tanlash
+    const randomIndex = Math.floor(Math.random() * questions.length);
+    return questions[randomIndex];
+  }
+
   async getSpeakingQuestionById(id: string) {
     const question = await this.prisma.aiSpeakingQuestion.findUnique({ where: { id } });
     if (!question) throw new NotFoundException('Savol topilmadi');
@@ -90,6 +106,22 @@ export class AiQuestionsService {
       where,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getRandomWritingQuestion(task?: number, cefrLevel?: string) {
+    const where: any = { isActive: true };
+    if (task) where.task = task;
+    if (cefrLevel) where.cefrLevel = cefrLevel;
+
+    const questions = await this.prisma.aiWritingQuestion.findMany({ where });
+    
+    if (questions.length === 0) {
+      throw new NotFoundException('Faol savollar topilmadi');
+    }
+
+    // Random question tanlash
+    const randomIndex = Math.floor(Math.random() * questions.length);
+    return questions[randomIndex];
   }
 
   async getWritingQuestionById(id: string) {

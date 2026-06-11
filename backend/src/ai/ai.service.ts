@@ -811,4 +811,435 @@ Pause Metrics: ${JSON.stringify(pauseMetrics, null, 2)}`;
       record,
     };
   }
+
+  // AI Practice Speaking Analysis (for /api/ai/speaking/analyze)
+  async analyzeSpeakingPractice(
+    userId: string,
+    audioBuffer: Buffer,
+    filename: string,
+    mimeType: string,
+    questionText: string,
+    part: number,
+  ) {
+    // Step 1: Transcribe audio
+    const stt = await this.groq.transcribeAudio({
+      buffer: audioBuffer,
+      filename,
+      mimeType,
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.speaking-practice.stt',
+      model: stt.model,
+      latencyMs: stt.latencyMs,
+    });
+
+    const pauseMetrics = pauseMetricsFromSegments(stt.segments, stt.text || '');
+    const transcriptWordCount = (stt.text || '').trim().split(/\s+/).filter(Boolean).length;
+
+    // ⚠️ CRITICAL CHECK: Bo'sh yoki juda qisqa javob = 0 BALL
+    if (transcriptWordCount < 10) {
+      return {
+        fluency: 0,
+        vocabulary: 0,
+        grammar: 0,
+        pronunciation: 0,
+        overallScore: 0,
+        detectedLevel: 'A1',
+        transcription: stt.text || '(bo\'sh)',
+        grammarErrors: ['⚠️ Javob juda qisqa yoki bo\'sh. Kamida 30 so\'z gapiring.'],
+        feedback: '⚠️ XATO: Audio bo\'sh yoki juda qisqa (kamida 30 so\'z kerak). Mikrofon ruxsatini tekshiring va qayta urinib ko\'ring.',
+        suggestions: [
+          'Mikrofon ruxsatini bering va audio yozilishini tekshiring',
+          'Kamida 30-60 soniya gapiring (juda qisqa javob past ball)',
+          'Savolga to\'liq va batafsil javob bering',
+          'Audio sifatini tekshiring - ovoz aniq eshitilishi kerak'
+        ],
+      };
+    }
+
+    // PROFESSIONAL CEFR SPEAKING EXAMINER PROMPT
+    const system = `Sen professional CEFR Speaking Examiner san. Sen ANIQ, TO'G'RI va JUDA QATTIQ baholash qilasan.
+
+⚠️ MUHIM QOIDA: Hech narsa demaganlar yoki juda kam gapirganlar uchun 0-2 ball ber!
+
+Bu Speaking Part ${part}:
+- Part 1: Shaxsiy savollar (qisqa javoblar, 30-60 so'z)
+- Part 2: Monolog (uzoq javob, 100-150 so'z) 
+- Part 3: Muhokama (tahliliy javoblar, 60-100 so'z)
+
+Transkripsiya: ${transcriptWordCount} so'z
+
+⚠️ SO'Z SONI BO'YICHA QATTIQ BAHOLASH:
+- 0-10 so'z = 0 ball (hech narsa demagan, AVTOMATIK 0!)
+- 10-20 so'z = 0-1 ball (juda kam, deyarli javob yo'q)
+- 20-30 so'z = 1-2 ball (kam, to'liq emas)
+- 30-50 so'z = 2-4 ball (yetarli emas)
+- 50-80 so'z = 4-6 ball (o'rtacha)
+- 80-120 so'z = 6-8 ball (yaxshi)
+- 120+ so'z = 8-10 ball (a'lo)
+
+${transcriptWordCount < 30 ? '⚠️⚠️⚠️ JUDA QISQA! Maksimum 1-2 ball ber! ⚠️⚠️⚠️' : ''}
+
+4 ta kriteriya bo'yicha baho ber (0-10):
+
+1. **Fluency & Coherence**
+   - Juda qisqa javob (< 30 so'z) = 0-2 ball
+   - Ko'p pauza (>1.5s) = KATTA minus
+   - Hesitation (um, uh) = minus
+   - 0-2: Hech narsa yoki juda kam
+   - 3-4: Ko'p pauza
+   - 5-6: O'rtacha
+   - 7-8: Yaxshi
+   - 9-10: A'lo
+
+2. **Vocabulary**
+   - Juda qisqa javob = 0-2 ball
+   - Bir xl so'z qayta-qayta = PAST
+   - 0-2: Hech narsa yoki juda cheklangan
+   - 3-4: Cheklangan
+   - 5-6: O'rtacha
+   - 7-8: Yaxshi
+   - 9-10: Keng
+
+3. **Grammar**
+   - Juda qisqa javob = 0-2 ball
+   - Har jumlada xato = KATTA minus
+   - 0-2: Hech narsa yoki juda ko'p xato
+   - 3-4: Ko'p xato
+   - 5-6: Ba'zi xato
+   - 7-8: Oz xato
+   - 9-10: Deyarli xatosiz
+
+4. **Pronunciation**
+   - Juda qisqa javob = 0-2 ball
+   - 0-2: Hech narsa
+   - 3-4: Qiyin tushunarli
+   - 5-6: Tushunarli
+   - 7-8: Aniq
+   - 9-10: Native darajada
+
+JSON format (QATTIQ BAHOLASH!):
+{
+  "fluency": number (0-10, juda qisqa = 0-2),
+  "vocabulary": number (0-10, juda qisqa = 0-2),
+  "grammar": number (0-10, juda qisqa = 0-2),
+  "pronunciation": number (0-10, juda qisqa = 0-2),
+  "overallScore": number (o'rtacha),
+  "detectedLevel": string (A1|A2|B1|B2|C1|C2),
+  "transcription": string,
+  "grammarErrors": ["Xato → To'g'ri (Sabab)", ...],
+  "feedback": "...",
+  "suggestions": ["...", ...]
+}
+
+CEFR DARAJA:
+- 8.5-10: C2
+- 8.0-8.4: C1
+- 7.0-7.9: B2
+- 6.0-6.9: B1
+- 5.0-5.9: A2
+- 0-4.9: A1
+
+QATTIQ BAHOLASH! Bo'sh yoki qisqa javob = PAST BALL!`;
+
+    const user = `Part ${part} SAVOL:
+${questionText}
+
+STUDENT JAVOBI (${transcriptWordCount} so'z):
+${stt.text || '(bo\'sh)'}
+
+⚠️ DIQQAT: ${transcriptWordCount < 30 ? 'JUDA QISQA! Maksimum 1-2 ball ber!' : transcriptWordCount < 50 ? 'Qisqa! Maksimum 4 ball ber!' : 'Yetarli uzunlik'}
+
+QATTIQ BAHOLASH! Bo'sh = 0, qisqa = 1-2, past = 3-4, o'rtacha = 5-6, yaxshi = 7-8, a'lo = 9-10`;
+
+    const { parsed, usage, latencyMs, model } = await this.groq.chatJson<any>({
+      system,
+      user,
+      model: 'llama-3.3-70b-versatile',
+      maxTokens: 2500,
+      temperature: 0.1,  // Very low for strict, consistent grading
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.speaking-practice.analysis',
+      model,
+      inputTokens: usage.input,
+      outputTokens: usage.output,
+      latencyMs,
+    });
+
+    // Save to database
+    const { storageKey: audioStorageKey } = await this.storage.saveSpeakingAudio(audioBuffer, mimeType, filename);
+
+    const record = await this.prisma.speakingRecord.create({
+      data: {
+        userId,
+        audioStorageKey,
+        transcript: stt.text || '',
+        sttProvider: 'groq-whisper-large-v3',
+        pauseMetrics: pauseMetrics as object,
+        segmentMetadata: {
+          segments: stt.segments ?? [],
+          sttModel: stt.model,
+          sttLatencyMs: stt.latencyMs,
+          wordCount: transcriptWordCount,
+        } as object,
+        fluencyScore: Math.round(parsed.fluency || 0),
+        grammarScore: Math.round(parsed.grammar || 0),
+        pronunciationScore: Math.round(parsed.pronunciation || 0),
+        overallScore: parsed.overallScore || 0,
+        estimatedSpeakingCefr: parsed.detectedLevel || 'A1',
+        pronunciationAnalysis: {
+          score: parsed.pronunciation || 0,
+          note: 'Based on transcript analysis',
+        } as object,
+        fluencyAnalysis: {
+          score: parsed.fluency || 0,
+          pauseMetrics: pauseMetrics,
+          wordCount: transcriptWordCount,
+        } as object,
+        feedback: parsed.feedback || 'Tahlil tugallanmadi.',
+      },
+    });
+
+    // Log AI report
+    await this.prisma.aiReport.create({
+      data: {
+        userId,
+        kind: 'SPEAKING',
+        model,
+        tokensUsed: (usage.input ?? 0) + (usage.output ?? 0),
+        payload: {
+          recordId: record.id,
+          part,
+          wordCount: transcriptWordCount,
+          overallScore: parsed.overallScore || 0,
+          detectedLevel: parsed.detectedLevel || 'A1',
+          scores: {
+            fluency: parsed.fluency || 0,
+            vocabulary: parsed.vocabulary || 0,
+            grammar: parsed.grammar || 0,
+            pronunciation: parsed.pronunciation || 0,
+          },
+        },
+      },
+    });
+
+    // Format response for frontend
+    return {
+      fluency: parsed.fluency || 0,
+      vocabulary: parsed.vocabulary || 0,
+      grammar: parsed.grammar || 0,
+      pronunciation: parsed.pronunciation || 0,
+      overallScore: parsed.overallScore || 0,
+      detectedLevel: parsed.detectedLevel || 'A1',
+      transcription: stt.text || '',
+      grammarErrors: parsed.grammarErrors || [],
+      feedback: parsed.feedback || 'Tahlil muvaffaqiyatsiz tugadi.',
+      suggestions: parsed.suggestions || [],
+    };
+  }
+
+  // AI Practice Writing Analysis (for /api/ai/writing/analyze)
+  async analyzeWritingPractice(userId: string, dto: {
+    essay: string;
+    questionText: string;
+    task: number;
+    minWords: number;
+    maxWords: number;
+  }) {
+    const wordCount = dto.essay.trim().split(/\s+/).filter(Boolean).length;
+
+    if (wordCount < 10) {
+      throw new BadRequestException('Kamida 10 ta so\'z yozing');
+    }
+
+    // PROFESSIONAL CEFR WRITING EXAMINER PROMPT
+    const system = `Sen professional CEFR Writing Examiner san. Sen ANIQ, TO'G'RI va QATTIQ baholash qilasan.
+
+Bu Writing ${dto.task} (${dto.task === 1 ? 'Letter/Email (100-150 so\'z)' : 'Essay (250-350 so\'z)'}).
+Talab: ${dto.minWords}-${dto.maxWords} so'z
+Haqiqiy: ${wordCount} so'z
+
+${wordCount < dto.minWords ? `⚠️ JUDA QISQA! Minimum ${dto.minWords} so'z kerak edi. Bu KATTA minus.` : ''}
+
+4 ta kriteriya bo'yicha baho ber (0-10):
+
+1. **Task Achievement / Task Response**
+   - Writing 1: Maqsad to'liq erishldi mi? Barcha punktlar yoritildi mi?
+   - Writing 2: Savolga to'liq javob berildimi? Ikkala fikr ham muhokama qilindimi? O'z fikr aytildimi?
+   - Off-topic yoki yarim-yaralla = 3-4 ball
+   - Partial answer = 5-6 ball
+   - Complete answer = 7-8 ball
+   - Excellent coverage = 9-10 ball
+
+2. **Coherence & Cohesion**
+   - Kirish-Asosiy-Xulosa bor mi?
+   - Paragraflar mantiqiy tartibda mi?
+   - Linking words (however, moreover, furthermore) ishlatildimi?
+   - Fikrlar bir-biriga bog'langan mi?
+   - No structure = 3-4 ball
+   - Basic structure = 5-6 ball
+   - Good structure = 7-8 ball
+   - Perfect flow = 9-10 ball
+
+3. **Lexical Resource (So'z boyligi)**
+   - Har bir so'z qayta-qayta ishlatilgan = PAST
+   - Faqat basic words (good, bad, important) = 4-5 ball
+   - Mixed vocabulary = 6-7 ball
+   - Academic words, synonyms = 8-9 ball
+   - Sophisticated, precise words = 10 ball
+
+4. **Grammatical Range & Accuracy**
+   - Har bir jumlada xato = 3-4 ball
+   - Ko'p xatolar = 5-6 ball
+   - Ba'zi xatolar = 7-8 ball
+   - Juda oz xato = 9-10 ball
+   - Complex structures (relative clauses, conditionals) = bonus
+
+JSON FORMATDA javob ber:
+{
+  "taskResponse": number (0-10, ANIQ ball),
+  "coherence": number (0-10, ANIQ ball),
+  "lexical": number (0-10, ANIQ ball),
+  "grammar": number (0-10, ANIQ ball),
+  "overallScore": number (0-10, 4 ta ball ning o'rtachasi),
+  "detectedLevel": string (A1|A2|B1|B2|C1|C2),
+  "grammarErrors": [
+    "Xato: \"people is\" → To'g'ri: \"people are\" (Sabab: people ko'plik)",
+    "Xato: \"more better\" → To'g'ri: \"better\" (Sabab: better allaqachon comparative)",
+    "Xato: \"In the conclusion\" → To'g'ri: \"In conclusion\" (Sabab: bu fixed phrase)",
+    "... (5-10 ta aniq xato)"
+  ],
+  "strengths": [
+    "Aniq kirish va xulosa bor",
+    "Paragraf tuzilishi to'g'ri",
+    "Linking words yaxshi ishlatilgan",
+    "... (3-5 ta kuchli tomon)"
+  ],
+  "improvements": [
+    "Ko'proq sinonim ishlating (good → excellent, beneficial, advantageous)",
+    "Akademik so'zlar qo'shing (enhance, facilitate, demonstrate)",
+    "Complex sentence structures qo'llang",
+    "... (3-5 ta yaxshilash kerak)"
+  ],
+  "feedback": "Essay strukturasi yaxshi, lekin so'z boyligi cheklangan. Grammatikada artikl va preposition xatolari ko'p. Task ga to'liq javob berilgan, lekin ko'proq detallar kerak edi. Umumiy daraja B1, C1 ga yetish uchun akademik so'zlar va complex grammar kerak.",
+  "suggestions": [
+    "Academic Word List (AWL) ning 100 ta eng ko'p ishlatiladigan so'zini yod oling",
+    "Relative clauses (who, which, that) bilan jumlalar tuzing",
+    "Cause-effect structures (because, therefore, consequently) qo'llang",
+    "Har kuni 1 ta academic essay o'qing va yangi so'zlar yozing",
+    "... (4-6 ta aniq tavsiya)"
+  ]
+}
+
+CEFR DARAJA (O'rtacha ball asosida):
+- 8.5-10: C2 (Mastery)
+- 8.0-8.4: C1 (Effective Operational Proficiency)
+- 7.0-7.9: B2 (Vantage)
+- 6.0-6.9: B1 (Threshold)
+- 5.0-5.9: A2 (Waystage)
+- 0-4.9: A1 (Breakthrough)
+
+MUHIM QOIDALAR:
+1. REAL examiner kabi QATTIQ baho ber
+2. Har bir xatoni ANIQ ko'rsat va TO'G'RISINI yoz
+3. Feedback KONKRET bo'lsin (umumiy "good job" emas!)
+4. Suggestions AMALIY bo'lsin (nima qilish kerak?)
+5. Barcha matnlar O'ZBEKCHA bo'lsin
+
+Hozir tahlil boshlang:`;
+
+    const user = `PROMPT (Topic/Question):
+${dto.questionText}
+
+STUDENT ESSAY (${wordCount} so'z):
+${dto.essay}
+
+ANIQ TAHLIL BERING (JSON format):`;
+
+    const { parsed, usage, latencyMs, model } = await this.groq.chatJson<any>({
+      system,
+      user,
+      model: 'llama-3.3-70b-versatile',
+      maxTokens: 3000,
+      temperature: 0.2,  // Lower temperature for more consistent, strict grading
+    });
+
+    await this.logUsage({
+      userId,
+      endpoint: 'ai.writing-practice.analysis',
+      model,
+      inputTokens: usage.input,
+      outputTokens: usage.output,
+      latencyMs,
+    });
+
+    // Save to database
+    const submission = await this.prisma.writingSubmission.create({
+      data: {
+        userId,
+        essay: dto.essay,
+        wordCount,
+        grammarScore: Math.round(parsed.grammar || 0),
+        vocabScore: Math.round(parsed.lexical || 0),
+        coherenceScore: Math.round(parsed.coherence || 0),
+        aiFeedback: parsed.feedback || 'Tahlil tugallanmadi.',
+        estimatedLevel: parsed.detectedLevel || 'A1',
+        grammarAnalysis: {
+          errors: parsed.grammarErrors || [],
+          improvements: parsed.improvements || [],
+        },
+        vocabularyAnalysis: {
+          strengths: parsed.strengths || [],
+          suggestions: parsed.suggestions || [],
+        },
+        coherenceAnalysis: {
+          taskResponse: parsed.taskResponse || 0,
+          coherence: parsed.coherence || 0,
+        },
+      },
+    });
+
+    // Log AI report
+    await this.prisma.aiReport.create({
+      data: {
+        userId,
+        kind: 'WRITING',
+        model,
+        tokensUsed: (usage.input ?? 0) + (usage.output ?? 0),
+        payload: {
+          submissionId: submission.id,
+          task: dto.task,
+          wordCount,
+          overallScore: parsed.overallScore || 0,
+          detectedLevel: parsed.detectedLevel || 'A1',
+          scores: {
+            taskResponse: parsed.taskResponse || 0,
+            coherence: parsed.coherence || 0,
+            lexical: parsed.lexical || 0,
+            grammar: parsed.grammar || 0,
+          },
+        },
+      },
+    });
+
+    // Format response for frontend
+    return {
+      taskResponse: parsed.taskResponse || 0,
+      coherence: parsed.coherence || 0,
+      lexical: parsed.lexical || 0,
+      grammar: parsed.grammar || 0,
+      overallScore: parsed.overallScore || 0,
+      detectedLevel: parsed.detectedLevel || 'A1',
+      grammarErrors: parsed.grammarErrors || [],
+      strengths: parsed.strengths || [],
+      improvements: parsed.improvements || [],
+      feedback: parsed.feedback || 'Tahlil muvaffaqiyatsiz tugadi.',
+      suggestions: parsed.suggestions || [],
+    };
+  }
 }

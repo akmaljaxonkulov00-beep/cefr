@@ -20,6 +20,15 @@ export class AiQuestionsController {
     return this.aiQuestionsService.getSpeakingQuestions(filters);
   }
 
+  @Get('speaking/random')
+  async getRandomSpeakingQuestion(
+    @Query('part') part?: string,
+    @Query('cefrLevel') cefrLevel?: string,
+  ) {
+    const partNum = part ? parseInt(part) : undefined;
+    return this.aiQuestionsService.getRandomSpeakingQuestion(partNum, cefrLevel);
+  }
+
   @Get('speaking/:id')
   async getSpeakingQuestionById(@Param('id') id: string) {
     return this.aiQuestionsService.getSpeakingQuestionById(id);
@@ -63,6 +72,15 @@ export class AiQuestionsController {
     if (isActive !== undefined) filters.isActive = isActive === 'true';
 
     return this.aiQuestionsService.getWritingQuestions(filters);
+  }
+
+  @Get('writing/random')
+  async getRandomWritingQuestion(
+    @Query('task') task?: string,
+    @Query('cefrLevel') cefrLevel?: string,
+  ) {
+    const taskNum = task ? parseInt(task) : undefined;
+    return this.aiQuestionsService.getRandomWritingQuestion(taskNum, cefrLevel);
   }
 
   @Get('writing/:id')

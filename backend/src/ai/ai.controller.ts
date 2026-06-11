@@ -157,4 +157,46 @@ export class AiController {
       body.question,
     );
   }
+
+  // AI Practice Speaking Analysis (for AI Speaking page)
+  @Throttle({ default: { limit: 15, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('speaking/analyze')
+  @UseInterceptors(
+    FileInterceptor('audio', {
+      storage: memoryStorage(),
+      limits: { fileSize: Number(process.env.MAX_SPEAKING_AUDIO_BYTES) || 20 * 1024 * 1024 },
+    }),
+  )
+  async analyzeSpeakingPractice(
+    @CurrentUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() body: { questionText: string; part: string },
+  ) {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('Audio fayl (audio) yuklang');
+    }
+    return this.aiService.analyzeSpeakingPractice(
+      userId,
+      file.buffer,
+      file.originalname || 'recording.webm',
+      file.mimetype,
+      body.questionText,
+      parseInt(body.part || '1'),
+    );
+  }
+
+  // AI Practice Writing Analysis (for AI Writing page)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('writing/analyze')
+  async analyzeWritingPractice(@CurrentUser('id') userId: string, @Body() dto: {
+    essay: string;
+    questionText: string;
+    task: number;
+    minWords: number;
+    maxWords: number;
+  }) {
+    return this.aiService.analyzeWritingPractice(userId, dto);
+  }
 }
