@@ -54,7 +54,7 @@ export default function AdminMockPartsPage() {
       if (filterSkill !== 'ALL') params.skill = filterSkill;
       if (filterStatus !== 'ALL') params.status = filterStatus;
       
-      const { data } = await api.get('/mock-parts', { params });
+      const { data } = await api.get('/api/mock-parts', { params });
       setParts(data.parts);
       setFilteredParts(data.parts);
       setTotalPages(data.pagination.totalPages);

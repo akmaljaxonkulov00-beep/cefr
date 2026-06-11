@@ -26,7 +26,7 @@ export default function AdminPricing() {
 
   const fetchPrices = async () => {
     try {
-      const { data } = await api.get('/settings/pricing');
+      const { data } = await api.get('/api/settings/pricing');
       setPrices(data);
       setEditPrices({
         mockCefrUzs: data?.mockCefrUzs || 0,
