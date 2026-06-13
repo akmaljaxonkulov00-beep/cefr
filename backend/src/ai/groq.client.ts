@@ -88,13 +88,31 @@ export class GroqClientService {
         latencyMs,
         model: model.trim(),
       };
-    } catch (err) {
+    } catch (err: any) {
       const errorMsg = formatGroqError(err);
       this.logger.error(`Groq chat error: ${errorMsg}`);
-      if (err instanceof APIError && err.status === 401) {
-        throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+      
+      // SSL/Certificate errors
+      if (err.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || err.code === 'CERT_HAS_EXPIRED' || err.message?.includes('certificate')) {
+        throw new ServiceUnavailableException('❌ SSL sertifikat xatosi. Internet ulanishini yoki firewall sozlamalarini tekshiring. Backend/.env da GROQ_API_KEY to\'g\'ri sozlanganligini tasdiqlang.');
       }
-      throw new ServiceUnavailableException(`AI service error: ${errorMsg}. Please check your API key and try again.`);
+      
+      // Network/Connection errors
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT' || err.message?.includes('Connection error')) {
+        throw new ServiceUnavailableException('❌ Internet ulanishi yo\'q yoki Groq serveri javob bermayapti. Tarmoq ulanishini tekshiring va qayta urinib ko\'ring.');
+      }
+      
+      // API Key errors
+      if (err instanceof APIError && err.status === 401) {
+        throw new ServiceUnavailableException('❌ Noto\'g\'ri GROQ_API_KEY. backend/.env faylini tekshiring va backend serverni qayta ishga tushiring.');
+      }
+      
+      // Other API errors
+      if (err instanceof APIError) {
+        throw new ServiceUnavailableException(`❌ Groq API xatosi (${err.status}): ${errorMsg}. API limitga yetgan bo\'lishi mumkin, bir oz kuting va qayta urinib ko\'ring.`);
+      }
+      
+      throw new ServiceUnavailableException(`❌ AI service xatosi: ${errorMsg}. GROQ_API_KEY va internet ulanishini tekshiring.`);
     }
   }
 
@@ -132,8 +150,19 @@ export class GroqClientService {
           model,
           latencyMs,
         };
-      } catch (e1) {
+      } catch (e1: any) {
         this.logger.warn(`Groq STT verbose_json failed, trying fallback: ${formatGroqError(e1)}`);
+        
+        // SSL/Certificate errors
+        if (e1.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || e1.code === 'CERT_HAS_EXPIRED' || e1.message?.includes('certificate')) {
+          throw new ServiceUnavailableException('❌ SSL sertifikat xatosi. Internet ulanishini yoki firewall sozlamalarini tekshiring. Backend/.env da GROQ_API_KEY to\'g\'ri sozlanganligini tasdiqlang.');
+        }
+        
+        // Network/Connection errors
+        if (e1.code === 'ENOTFOUND' || e1.code === 'ECONNREFUSED' || e1.code === 'ETIMEDOUT' || e1.message?.includes('Connection error')) {
+          throw new ServiceUnavailableException('❌ Internet ulanishi yo\'q yoki Groq serveri javob bermayapti. Tarmoq ulanishini tekshiring va qayta urinib ko\'ring.');
+        }
+        
         try {
           const file2 = await toFile(params.buffer, params.filename, { type: params.mimeType });
           const res = await client.audio.transcriptions.create({
@@ -145,22 +174,44 @@ export class GroqClientService {
           const plain = res as unknown as { text?: string };
           this.logger.log(`Groq STT fallback json success: latency=${latencyMs}ms, text_length=${plain.text?.length || 0}`);
           return { text: plain.text ?? '', segments: undefined, model, latencyMs };
-        } catch (e2) {
+        } catch (e2: any) {
           const errorMsg = formatGroqError(e2);
           this.logger.error(`Groq STT (fallback json) failed: ${errorMsg}`);
-          if (e2 instanceof APIError && e2.status === 401) {
-            throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+          
+          // SSL/Certificate errors
+          if (e2.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || e2.code === 'CERT_HAS_EXPIRED' || e2.message?.includes('certificate')) {
+            throw new ServiceUnavailableException('❌ SSL sertifikat xatosi. Internet ulanishini yoki firewall sozlamalarini tekshiring.');
           }
-          throw new ServiceUnavailableException(`Speech-to-text service error: ${errorMsg}. Check GROQ_API_KEY in backend/.env and GROQ_STT_MODEL (e.g. whisper-large-v3).`);
+          
+          // Network/Connection errors
+          if (e2.code === 'ENOTFOUND' || e2.code === 'ECONNREFUSED' || e2.code === 'ETIMEDOUT' || e2.message?.includes('Connection error')) {
+            throw new ServiceUnavailableException('❌ Internet ulanishi yo\'q. Tarmoq ulanishini tekshiring va qayta urinib ko\'ring.');
+          }
+          
+          if (e2 instanceof APIError && e2.status === 401) {
+            throw new ServiceUnavailableException('❌ Noto\'g\'ri GROQ_API_KEY. backend/.env faylini tekshiring.');
+          }
+          throw new ServiceUnavailableException(`❌ Speech-to-text xatosi: ${errorMsg}. GROQ_API_KEY va internet ulanishini tekshiring.`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       const errorMsg = formatGroqError(error);
       this.logger.error(`Groq client initialization or transcription error: ${errorMsg}`);
-      if (error instanceof APIError && error.status === 401) {
-        throw new ServiceUnavailableException('Invalid GROQ_API_KEY. Please check backend/.env configuration.');
+      
+      // SSL/Certificate errors
+      if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || error.code === 'CERT_HAS_EXPIRED' || error.message?.includes('certificate')) {
+        throw new ServiceUnavailableException('❌ SSL sertifikat xatosi. Internet yoki firewall sozlamalarini tekshiring.');
       }
-      throw new ServiceUnavailableException(`Speech-to-text service error: ${errorMsg}. Check GROQ_API_KEY in backend/.env and ensure the key is valid.`);
+      
+      // Network/Connection errors
+      if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.message?.includes('Connection error')) {
+        throw new ServiceUnavailableException('❌ Internet ulanishi yo\'q. Tarmoq ulanishini tekshiring.');
+      }
+      
+      if (error instanceof APIError && error.status === 401) {
+        throw new ServiceUnavailableException('❌ Noto\'g\'ri GROQ_API_KEY. backend/.env da tekshiring.');
+      }
+      throw new ServiceUnavailableException(`❌ Audio tahlil xatosi: ${errorMsg}. GROQ_API_KEY va tarmoq sozlamalarini tekshiring.`);
     }
   }
 }

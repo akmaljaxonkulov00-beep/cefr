@@ -34,7 +34,9 @@ export default function AiSpeakingPage() {
   const [aiFeedback, setAiFeedback] = useState<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const [audioBlobs, setAudioBlobs] = useState<Blob[]>([]); // Part 1 uchun 3 ta audio
   const [allResults, setAllResults] = useState<any[]>([]);
+  const [part1Questions, setPart1Questions] = useState<SpeakingQuestion[]>([]); // Part 1: 3 ta savol ro'yxati
 
   const currentQuestion = currentQuestions[currentIndex];
 
@@ -59,18 +61,27 @@ export default function AiSpeakingPage() {
   }, [timeLeft, phase, isRecording]);
 
   const getFallbackQuestion = (part: number): SpeakingQuestion => {
-    const fallbacks: Record<number, string> = {
-      1: 'Tell me about your hometown. What do you like most about living there?',
-      2: 'Describe a memorable event in your life. You should say:\n- When it happened\n- Where it was\n- Who was with you\n- Why it was memorable',
-      3: 'Do you think technology has improved communication between people? Why or why not?'
+    const fallbacks: Record<number, { question: string; time: number }> = {
+      1: {
+        question: 'Tell me about your hometown. What do you like most about living there?',
+        time: 30 // Part 1: 30 seconds
+      },
+      2: {
+        question: 'Describe a memorable event in your life. You should say:\n- When it happened\n- Where it was\n- Who was with you\n- Why it was memorable',
+        time: 60 // Part 2: 60 seconds (1 minute)
+      },
+      3: {
+        question: 'Do you think technology has improved communication between people? Why or why not?',
+        time: 90 // Part 3: 90 seconds (1.5 minutes)
+      }
     };
 
     return {
       id: `fallback-part${part}`,
       part,
-      cefrLevel: 'B2', // Default, but AI will determine actual level
-      questionText: fallbacks[part],
-      timeLimitSeconds: part === 2 ? 120 : 60,
+      cefrLevel: 'B2',
+      questionText: fallbacks[part].question,
+      timeLimitSeconds: fallbacks[part].time,
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -88,28 +99,124 @@ export default function AiSpeakingPage() {
       let questions: SpeakingQuestion[] = [];
 
       if (selectedPart === 'all') {
-        for (let part = 1; part <= 3; part++) {
+        // Full Mock: Part 1 (FAQAT 3 ta savol) + Part 2 (1 ta) + Part 3 (1 ta)
+        console.log('🎯 Full Mock boshlandi - Part 1 uchun FAQAT 3 TA SAVOL yuklanadi');
+        
+        // Part 1 - FAQAT 3 ta TURLI savol (Interview)
+        const usedIds = new Set<string>();
+        let attemptCount = 0;
+        const maxAttempts = 10;
+        
+        while (questions.length < 3 && attemptCount < maxAttempts) {
+          attemptCount++;
+          console.log(`📥 Part 1 - Savol ${questions.length + 1}/3 yuklanmoqda... (urinish ${attemptCount})`);
           try {
-            const { data } = await api.get(`/api/ai-questions/speaking/random?part=${part}`);
-            questions.push(data);
-          } catch {
-            questions.push(getFallbackQuestion(part));
+            const { data } = await api.get(`/api/ai-questions/speaking/random?part=1`);
+            
+            // Faqat UNIQUE savollarni qo'shamiz
+            if (!usedIds.has(data.id)) {
+              questions.push(data);
+              usedIds.add(data.id);
+              console.log(`✅ Part 1 - Savol ${questions.length}/3 qo'shildi (ID: ${data.id})`);
+            } else {
+              console.log(`⚠️ DUPLICATE savol (ID: ${data.id}), qayta urinilmoqda...`);
+            }
+          } catch (error) {
+            console.log(`❌ Part 1 - Savol yuklanmadi, fallback ishlatiladi`);
+            questions.push(getFallbackQuestion(1));
           }
         }
-        toast('3 ta part yuklandi', { icon: '✅' });
+        
+        // MUHIM: Agar 3tadan ko'p bo'lsa - kesib tashlash
+        if (questions.length > 3) {
+          console.warn(`⚠️ XATO: Part 1 da ${questions.length} ta savol! Faqat 3tasini qoldirish`);
+          questions = questions.slice(0, 3);
+        }
+        
+        console.log(`✅ Part 1 tugadi - Jami ${questions.length} ta savol`);
+        
+        // Part 2 - 1 ta savol (Long Turn / Monolog)
+        console.log('📥 Part 2 - 1 ta savol yuklanmoqda...');
+        try {
+          const { data } = await api.get(`/api/ai-questions/speaking/random?part=2`);
+          questions.push(data);
+          console.log(`✅ Part 2 qo'shildi - Jami ${questions.length} ta savol`);
+        } catch {
+          questions.push(getFallbackQuestion(2));
+          console.log(`❌ Part 2 yuklanmadi, fallback ishlatildi - Jami ${questions.length} ta savol`);
+        }
+        
+        // Part 3 - 1 ta savol (Discussion)
+        console.log('📥 Part 3 - 1 ta savol yuklanmoqda...');
+        try {
+          const { data } = await api.get(`/api/ai-questions/speaking/random?part=3`);
+          questions.push(data);
+          console.log(`✅ Part 3 qo'shildi - Jami ${questions.length} ta savol`);
+        } catch {
+          questions.push(getFallbackQuestion(3));
+          console.log(`❌ Part 3 yuklanmadi, fallback ishlatildi - Jami ${questions.length} ta savol`);
+        }
+        
+        console.log(`🎉 Full Mock tugadi - JAMI ${questions.length} ta savol yuklandi`);
+        console.log('Savollar:', questions.map((q, i) => `${i + 1}. Part ${q.part} (ID: ${q.id})`));
+        toast('Full Mock yuklandi: Part 1 (3 savol) + Part 2 + Part 3', { icon: '✅' });
+      } else if (selectedPart === 1) {
+        // Part 1 only - FAQAT 3 ta savol (Interview questions)
+        console.log('🎯 Part 1 faqat boshlandi - FAQAT 3 TA SAVOL yuklanadi');
+        const usedIds = new Set<string>();
+        let attemptCount = 0;
+        const maxAttempts = 10; // Infinite loop'dan himoya
+        
+        while (questions.length < 3 && attemptCount < maxAttempts) {
+          attemptCount++;
+          console.log(`📥 Savol ${questions.length + 1}/3 yuklanmoqda... (urinish ${attemptCount})`);
+          try {
+            const { data } = await api.get(`/api/ai-questions/speaking/random?part=1`);
+            
+            // Faqat UNIQUE savollarni qo'shamiz
+            if (!usedIds.has(data.id)) {
+              questions.push(data);
+              usedIds.add(data.id);
+              console.log(`✅ Savol ${questions.length}/3 qo'shildi (ID: ${data.id})`);
+            } else {
+              console.log(`⚠️ DUPLICATE savol (ID: ${data.id}), qayta urinilmoqda...`);
+            }
+          } catch (error) {
+            console.log(`❌ Savol yuklanmadi, fallback ishlatiladi`);
+            questions.push(getFallbackQuestion(1));
+          }
+        }
+        
+        console.log(`🎉 Part 1 tugadi - JAMI ${questions.length} ta savol yuklandi`);
+        console.log('Savollar:', questions.map((q, i) => `${i + 1}. ${q.questionText.substring(0, 50)}... (ID: ${q.id})`));
+        
+        // MUHIM: Agar 3tadan ko'p bo'lsa - kesib tashlash
+        if (questions.length > 3) {
+          console.warn(`⚠️ XATO: ${questions.length} ta savol yuklangan! Faqat 3tasini qoldirish`);
+          questions = questions.slice(0, 3);
+        }
+        
+        toast(`Part 1: ${questions.length} ta savol yuklandi`, { icon: '✅' });
       } else {
+        // Part 2 or Part 3 - 1 ta savol
+        console.log(`🎯 Part ${selectedPart} boshlandi - 1 ta savol yuklanadi`);
         try {
           const { data } = await api.get(`/api/ai-questions/speaking/random?part=${selectedPart}`);
           questions.push(data);
+          console.log(`✅ Part ${selectedPart} qo'shildi (ID: ${data.id})`);
         } catch {
           questions.push(getFallbackQuestion(selectedPart as number));
+          console.log(`❌ Part ${selectedPart} yuklanmadi, fallback ishlatildi`);
         }
+        console.log(`🎉 Part ${selectedPart} tugadi - JAMI ${questions.length} ta savol`);
         toast(`Part ${selectedPart} yuklandi`, { icon: '✅' });
       }
 
+      console.log(`📊 setCurrentQuestions(${questions.length} ta savol)`);
       setCurrentQuestions(questions);
       setCurrentIndex(0);
       setAllResults([]);
+      setAudioBlobs([]); // Audio bloblarni tozalash
       startPrep(questions[0]);
       
     } finally {
@@ -119,7 +226,9 @@ export default function AiSpeakingPage() {
 
   const startPrep = (question: SpeakingQuestion) => {
     setPhase('prep');
-    setTimeLeft(question.part === 2 ? 60 : 10);
+    // Part 1: 5 soniya prep, Part 2: 30 soniya prep, Part 3: 30 soniya prep
+    const prepTime = question.part === 1 ? 5 : 30;
+    setTimeLeft(prepTime);
     setAudioUrl(null);
     setAiFeedback(null);
     setIsRecording(false);
@@ -151,8 +260,28 @@ export default function AiSpeakingPage() {
         // Stream'ni to'xtatish
         stream.getTracks().forEach(t => t.stop());
         
-        // AI tahlil yuborish
-        await submitAnswer(url, blob);
+        // Part 1: Audiolarni saqlaymiz, AI tahlil oxirida
+        if (selectedPart === 1 || (selectedPart === 'all' && currentQuestion.part === 1)) {
+          console.log(`💾 Part 1 - Savol ${currentIndex + 1} audio saqlandi`);
+          setAudioBlobs(prev => [...prev, blob]);
+          
+          // Keyingi savol bormi?
+          if (currentIndex < currentQuestions.length - 1) {
+            // Keyingi savolga o'tish
+            console.log(`➡️ Keyingi savolga o'tilmoqda (${currentIndex + 2}/${currentQuestions.length})`);
+            setCurrentIndex(currentIndex + 1);
+            startPrep(currentQuestions[currentIndex + 1]);
+          } else {
+            // Oxirgi savol - hamma audiolarni AI'ga yuboramiz
+            console.log(`🤖 Part 1 tugadi - ${audioBlobs.length + 1} ta audio AI'ga yuborilmoqda`);
+            setPhase('result');
+            setLoading(true);
+            await submitAllPart1Answers([...audioBlobs, blob]);
+          }
+        } else {
+          // Part 2, Part 3: Darhol AI tahlil
+          await submitAnswer(url, blob);
+        }
       };
 
       mediaRecorder.start();
@@ -167,8 +296,85 @@ export default function AiSpeakingPage() {
       // MediaRecorder'ni to'xtatish
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      setPhase('result'); // Result phase'ga o'tish
-      setLoading(true); // Loading ko'rsatish
+      
+      // Part 1 va boshqa partlar uchun turli logic
+      if (selectedPart === 1 || (selectedPart === 'all' && currentQuestion.part === 1)) {
+        // Part 1: Audio saqlaymiz, lekin AI tahlil qilmaymiz
+        // Faqat keyingi savolga o'tamiz
+        setPhase('prep'); // Loading ko'rsatmasdan to'g'ridan-to'g'ri prep'ga
+      } else {
+        // Part 2, Part 3: AI tahlil qilamiz
+        setPhase('result');
+        setLoading(true);
+      }
+    }
+  };
+
+  const submitAllPart1Answers = async (blobs: Blob[]) => {
+    try {
+      console.log(`🚀 ${blobs.length} ta Part 1 audio AI'ga yuborilmoqda...`);
+      
+      // Har bir audio uchun AI tahlil
+      const results = [];
+      for (let i = 0; i < blobs.length; i++) {
+        const blob = blobs[i];
+        const question = currentQuestions[i];
+        
+        console.log(`📤 Savol ${i + 1}/${blobs.length} tahlil qilinmoqda...`);
+        
+        const formData = new FormData();
+        formData.append('audio', blob, `speaking-part1-q${i + 1}.webm`);
+        formData.append('questionText', question.questionText);
+        formData.append('part', question.part.toString());
+        
+        const { data } = await api.post('/api/ai/speaking/analyze', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        results.push({
+          question,
+          feedback: {
+            fluency: data.fluency || 0,
+            vocabulary: data.vocabulary || 0,
+            grammar: data.grammar || 0,
+            pronunciation: data.pronunciation || 0,
+            overallScore: data.overallScore || 0,
+            detectedLevel: data.detectedLevel || 'A1',
+            feedback: data.feedback || '',
+            grammarErrors: data.grammarErrors || [],
+            suggestions: data.suggestions || [],
+            transcription: data.transcription || '',
+          }
+        });
+        
+        console.log(`✅ Savol ${i + 1} tahlil tugadi - Score: ${data.overallScore}`);
+      }
+      
+      // O'rtacha natijani hisoblash
+      const avgScore = results.reduce((sum, r) => sum + r.feedback.overallScore, 0) / results.length;
+      const avgLevel = results[0].feedback.detectedLevel; // Birinchi natija asosida
+      
+      console.log(`🎉 Part 1 tahlil tugadi - O'rtacha: ${avgScore.toFixed(1)}/10, Daraja: ${avgLevel}`);
+      
+      setAiFeedback({
+        ...results[0].feedback,
+        overallScore: parseFloat(avgScore.toFixed(1)),
+        feedback: `Part 1 - 3 ta savol uchun umumiy natija:\n\n${results.map((r, i) => 
+          `Savol ${i + 1}: ${r.feedback.overallScore}/10 (${r.feedback.detectedLevel})`
+        ).join('\n')}\n\nO'rtacha ball: ${avgScore.toFixed(1)}/10\n\n${results[0].feedback.feedback}`,
+      });
+      
+      setAllResults(results);
+      setPhase('result');
+      setLoading(false);
+      
+    } catch (error: any) {
+      console.error('Part 1 AI analysis failed:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      toast.error(`AI tahlil xatosi: ${errorMsg}`);
+      setPhase('speaking');
+      setIsRecording(false);
+      setLoading(false);
     }
   };
 
@@ -292,7 +498,7 @@ export default function AiSpeakingPage() {
                 )}
                 {selectedPart === 'all' && (
                   <span className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-sm">
-                    {currentIndex + 1}/3
+                    {currentIndex + 1}/{currentQuestions.length}
                   </span>
                 )}
               </div>
@@ -318,8 +524,8 @@ export default function AiSpeakingPage() {
                     }`}
                   >
                     <div className="text-white font-semibold text-lg mb-1">Part 1</div>
-                    <div className="text-xs text-gray-400">Shaxsiy savollar</div>
-                    <div className="text-xs text-gray-500 mt-1">~1 daqiqa</div>
+                    <div className="text-xs text-gray-400">Interview (3 ta savol)</div>
+                    <div className="text-xs text-gray-500 mt-1">30 soniya/savol</div>
                   </button>
                   <button
                     onClick={() => setSelectedPart(2)}
@@ -330,8 +536,8 @@ export default function AiSpeakingPage() {
                     }`}
                   >
                     <div className="text-white font-semibold text-lg mb-1">Part 2</div>
-                    <div className="text-xs text-gray-400">Monolog (60s prep)</div>
-                    <div className="text-xs text-gray-500 mt-1">~2 daqiqa</div>
+                    <div className="text-xs text-gray-400">Monolog (30s prep)</div>
+                    <div className="text-xs text-gray-500 mt-1">1 daqiqa</div>
                   </button>
                   <button
                     onClick={() => setSelectedPart(3)}
@@ -342,8 +548,8 @@ export default function AiSpeakingPage() {
                     }`}
                   >
                     <div className="text-white font-semibold text-lg mb-1">Part 3</div>
-                    <div className="text-xs text-gray-400">Muhokama</div>
-                    <div className="text-xs text-gray-500 mt-1">~1.5 daqiqa</div>
+                    <div className="text-xs text-gray-400">Muhokama (30s prep)</div>
+                    <div className="text-xs text-gray-500 mt-1">1.5 daqiqa</div>
                   </button>
                   <button
                     onClick={() => setSelectedPart('all')}
@@ -354,15 +560,18 @@ export default function AiSpeakingPage() {
                     }`}
                   >
                     <div className="text-white font-semibold text-lg mb-1">🎯 Full Mock</div>
-                    <div className="text-xs text-gray-400">Barcha partlar</div>
-                    <div className="text-xs text-gray-500 mt-1">~4.5 daqiqa</div>
+                    <div className="text-xs text-gray-400">Barcha partlar (5 savol)</div>
+                    <div className="text-xs text-gray-500 mt-1">~4 daqiqa</div>
                   </button>
                 </div>
               </div>
 
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
                 <p className="text-blue-300 text-sm">
-                  💡 <strong>AI avtomatik baholaydi:</strong> Sizning javobingizga qarab (A1-C2) daraja aniqlanadi va ball beriladi.
+                  💡 <strong>Tayyorlanish vaqtlari:</strong><br/>
+                  • Part 1: 5 soniya + 30 soniya gapirish<br/>
+                  • Part 2: 30 soniya + 60 soniya gapirish<br/>
+                  • Part 3: 30 soniya + 90 soniya gapirish
                 </p>
               </div>
 
@@ -378,8 +587,78 @@ export default function AiSpeakingPage() {
             </div>
           )}
 
-          {/* PREP PHASE */}
-          {phase === 'prep' && currentQuestion && (
+          {/* PREP PHASE - Part 1: 3 ta savol ro'yxati */}
+          {phase === 'prep' && currentQuestion && (selectedPart === 1 || (selectedPart === 'all' && currentQuestion.part === 1)) && (
+            <div className="glass-dark rounded-2xl p-6 lg:p-8">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 rounded-xl mb-4">
+                  <Clock size={20} className="text-blue-400" />
+                  <span className="text-blue-400 font-mono text-xl font-bold">{formatTime(timeLeft)}</span>
+                </div>
+                <h2 className="text-xl font-bold text-white">⏱️ Tayyorlanish vaqti</h2>
+                <p className="text-gray-400 text-sm">Savol {currentIndex + 1}/3</p>
+              </div>
+
+              {/* 3 TA SAVOL RO'YXATI - Javob berilayotgani ajralib turadi */}
+              <div className="space-y-4 mb-6">
+                {currentQuestions.slice(0, 3).map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className={`rounded-xl p-5 transition-all ${
+                      idx === currentIndex
+                        ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 shadow-lg shadow-blue-500/30'
+                        : idx < currentIndex
+                        ? 'border-2 border-green-500/50 bg-green-500/5 opacity-60'
+                        : 'border-2 border-gray-700 bg-gray-800/30 opacity-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                        idx === currentIndex
+                          ? 'bg-blue-500 text-white'
+                          : idx < currentIndex
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-600 text-gray-300'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`leading-relaxed ${
+                          idx === currentIndex
+                            ? 'text-white font-medium text-lg'
+                            : idx < currentIndex
+                            ? 'text-green-300/80'
+                            : 'text-gray-400'
+                        }`}>
+                          {q.questionText}
+                        </p>
+                        {idx === currentIndex && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-blue-400 text-sm font-semibold animate-pulse">
+                              👆 Hozir bu savolga tayyorlanmoqdasiz
+                            </span>
+                          </div>
+                        )}
+                        {idx < currentIndex && (
+                          <span className="text-green-400 text-xs mt-1 block">✓ Tugallandi</span>
+                        )}
+                        {idx > currentIndex && (
+                          <span className="text-gray-500 text-xs mt-1 block">⏳ Kutilmoqda</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center text-gray-400 text-sm">
+                Tayyorlanish tugagach avtomatik yozib olish boshlanadi
+              </div>
+            </div>
+          )}
+
+          {/* PREP PHASE - Part 2 & 3: Bitta savol */}
+          {phase === 'prep' && currentQuestion && selectedPart !== 1 && !(selectedPart === 'all' && currentQuestion.part === 1) && (
             <div className="glass-dark rounded-2xl p-6 lg:p-8">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 rounded-xl mb-4">
@@ -390,9 +669,16 @@ export default function AiSpeakingPage() {
                 <p className="text-gray-400 text-sm">Savolni o'qib chiqing</p>
               </div>
 
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-3">Part {currentQuestion.part} - Savol:</h3>
-                <p className="text-gray-300 whitespace-pre-wrap leading-relaxed text-lg">
+              <div className="bg-gradient-to-br from-primary-500/10 to-blue-500/10 rounded-xl p-6 border-2 border-primary-500/50 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">
+                    {currentIndex + 1}
+                  </div>
+                  <h3 className="text-lg font-semibold text-primary-400">
+                    Part {currentQuestion.part}
+                  </h3>
+                </div>
+                <p className="text-white whitespace-pre-wrap leading-relaxed text-lg font-medium">
                   {currentQuestion.questionText}
                 </p>
               </div>
@@ -403,8 +689,8 @@ export default function AiSpeakingPage() {
             </div>
           )}
 
-          {/* SPEAKING PHASE */}
-          {phase === 'speaking' && currentQuestion && (
+          {/* SPEAKING PHASE - Part 1: 3 ta savol ro'yxati */}
+          {phase === 'speaking' && currentQuestion && (selectedPart === 1 || (selectedPart === 'all' && currentQuestion.part === 1)) && (
             <div className="glass-dark rounded-2xl p-6 lg:p-8">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 rounded-xl mb-4">
@@ -415,25 +701,114 @@ export default function AiSpeakingPage() {
                 {isRecording && <p className="text-red-400 text-sm animate-pulse">● Yozib olinmoqda...</p>}
               </div>
 
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10 mb-6">
-                <p className="text-gray-300 whitespace-pre-wrap leading-relaxed text-lg">
-                  {currentQuestion.questionText}
-                </p>
+              {/* 3 TA SAVOL RO'YXATI - Javob berilayotgani QIZIL, ajralib turadi */}
+              <div className="space-y-4 mb-6">
+                {currentQuestions.slice(0, 3).map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className={`rounded-xl p-5 transition-all ${
+                      idx === currentIndex
+                        ? 'border-2 border-red-500 bg-gradient-to-r from-red-500/30 to-pink-500/30 shadow-xl shadow-red-500/50 animate-pulse'
+                        : idx < currentIndex
+                        ? 'border-2 border-green-500/50 bg-green-500/5 opacity-60'
+                        : 'border-2 border-gray-700 bg-gray-800/30 opacity-40'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                        idx === currentIndex
+                          ? 'bg-red-500 text-white animate-bounce'
+                          : idx < currentIndex
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-600 text-gray-300'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`leading-relaxed ${
+                          idx === currentIndex
+                            ? 'text-white font-bold text-lg'
+                            : idx < currentIndex
+                            ? 'text-green-300/80'
+                            : 'text-gray-400'
+                        }`}>
+                          {q.questionText}
+                        </p>
+                        {idx === currentIndex && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-red-400 text-sm font-bold animate-pulse">
+                              🔴 HOZIR SHU SAVOLGA JAVOB BERYAPSIZ!
+                            </span>
+                          </div>
+                        )}
+                        {idx < currentIndex && (
+                          <span className="text-green-400 text-xs mt-1 block">✓ Tugallandi</span>
+                        )}
+                        {idx > currentIndex && (
+                          <span className="text-gray-500 text-xs mt-1 block">⏳ Kutilmoqda</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex justify-center mb-4">
                 <button
                   onClick={stopRecording}
                   disabled={!isRecording}
-                  className="px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <MicOff size={20} />
                   To'xtatish
                 </button>
               </div>
 
-              <div className="text-center mt-4 text-gray-400 text-sm">
-                Istalgan vaqtda to'xtatishingiz mumkin. Vaqt tugagach avtomatik to'xtaydi.
+              <div className="text-center text-gray-400 text-sm">
+                Vaqt tugagach avtomatik keyingi savolga o'tadi
+              </div>
+            </div>
+          )}
+
+          {/* SPEAKING PHASE - Part 2 & 3: Bitta savol */}
+          {phase === 'speaking' && currentQuestion && selectedPart !== 1 && !(selectedPart === 'all' && currentQuestion.part === 1) && (
+            <div className="glass-dark rounded-2xl p-6 lg:p-8">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 rounded-xl mb-4">
+                  <Clock size={20} className="text-red-400" />
+                  <span className="text-red-400 font-mono text-xl font-bold">{formatTime(timeLeft)}</span>
+                </div>
+                <h2 className="text-xl font-bold text-white">🎤 Gapiring!</h2>
+                {isRecording && <p className="text-red-400 text-sm animate-pulse">● Yozib olinmoqda...</p>}
+              </div>
+
+              <div className="bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-xl p-6 border-2 border-red-500 mb-6 animate-pulse">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold animate-bounce">
+                    {currentIndex + 1}
+                  </div>
+                  <h3 className="text-lg font-semibold text-red-400">
+                    Part {currentQuestion.part} - Javob beryapsiz
+                  </h3>
+                </div>
+                <p className="text-white whitespace-pre-wrap leading-relaxed text-lg font-medium">
+                  {currentQuestion.questionText}
+                </p>
+              </div>
+
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={stopRecording}
+                  disabled={!isRecording}
+                  className="px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <MicOff size={20} />
+                  To'xtatish
+                </button>
+              </div>
+
+              <div className="text-center text-gray-400 text-sm">
+                Istalgan vaqtda to'xtatishingiz mumkin
               </div>
             </div>
           )}

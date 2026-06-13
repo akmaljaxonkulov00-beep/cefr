@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AiQuestionsService } from './ai-questions.service';
 
 @Controller('ai-questions')
@@ -35,8 +35,14 @@ export class AiQuestionsController {
   }
 
   @Post('speaking')
+  @HttpCode(HttpStatus.CREATED)
   async createSpeakingQuestion(@Body() data: any) {
-    return this.aiQuestionsService.createSpeakingQuestion(data);
+    try {
+      return await this.aiQuestionsService.createSpeakingQuestion(data);
+    } catch (error) {
+      console.error('Create speaking question error:', error);
+      throw error;
+    }
   }
 
   @Put('speaking/:id')
@@ -89,8 +95,14 @@ export class AiQuestionsController {
   }
 
   @Post('writing')
+  @HttpCode(HttpStatus.CREATED)
   async createWritingQuestion(@Body() data: any) {
-    return this.aiQuestionsService.createWritingQuestion(data);
+    try {
+      return await this.aiQuestionsService.createWritingQuestion(data);
+    } catch (error) {
+      console.error('Create writing question error:', error);
+      throw error;
+    }
   }
 
   @Put('writing/:id')

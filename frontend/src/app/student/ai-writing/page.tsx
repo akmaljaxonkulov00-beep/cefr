@@ -178,9 +178,10 @@ export default function AiWritingPage() {
       setAnalyzing(false);
       setPhase('result');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI analysis failed:', error);
-      toast.error('AI tahlil xatosi! Backend ishlamayapti yoki Groq API key yo\'q.');
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      toast.error(`AI tahlil xatosi: ${errorMsg}`);
       setAnalyzing(false);
       setPhase('writing'); // Stay on writing phase for retry
       return; // Don't proceed to result phase

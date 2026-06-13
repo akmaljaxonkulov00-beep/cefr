@@ -6,7 +6,6 @@ import Sidebar from '@/components/Sidebar'
 
 interface DashboardStats {
   totalAttempts: number
-  ieltsAttempts: number
   cefrAttempts: number
   lastActivity: string | null
 }
@@ -15,7 +14,6 @@ export default function StudentDashboard() {
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalAttempts: 0,
-    ieltsAttempts: 0,
     cefrAttempts: 0,
     lastActivity: null
   })
@@ -59,14 +57,10 @@ export default function StudentDashboard() {
           </h1>
 
           {/* Statistika */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div className="glass-dark rounded-xl p-5">
               <p className="text-gray-400 text-sm mb-1">Jami testlar</p>
               <p className="text-3xl font-bold text-white">{stats.totalAttempts || 0}</p>
-            </div>
-            <div className="glass-dark rounded-xl p-5">
-              <p className="text-gray-400 text-sm mb-1">IELTS testlar</p>
-              <p className="text-3xl font-bold text-blue-400">{stats.ieltsAttempts || 0}</p>
             </div>
             <div className="glass-dark rounded-xl p-5">
               <p className="text-gray-400 text-sm mb-1">CEFR testlar</p>
@@ -75,24 +69,9 @@ export default function StudentDashboard() {
           </div>
 
           {/* Mock turlari */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 gap-4 mb-8">
             <div
-              onClick={() => router.push('/student/ielts')}
-              className="bg-gradient-to-br from-blue-500 to-blue-700 text-white
-                         rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow"
-            >
-              <div className="text-3xl mb-3">🎓</div>
-              <h2 className="text-xl font-bold mb-2">IELTS Mocklar</h2>
-              <p className="text-blue-100 text-sm">
-                Listening • Reading • Writing • Speaking
-              </p>
-              <p className="text-blue-200 text-xs mt-2">
-                Band score: 4.0 – 9.0
-              </p>
-            </div>
-
-            <div
-              onClick={() => router.push('/student/cefr')}
+              onClick={() => router.push('/student/cefr-parts')}
               className="bg-gradient-to-br from-green-500 to-green-700 text-white
                          rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow"
             >
@@ -115,8 +94,8 @@ export default function StudentDashboard() {
                 <p className="text-4xl mb-2">📝</p>
                 <p>Hali hech qanday test topshirilmagan</p>
                 <button
-                  onClick={() => router.push('/student/ielts')}
-                  className="mt-3 text-blue-400 hover:underline text-sm"
+                  onClick={() => router.push('/student/cefr-parts')}
+                  className="mt-3 text-green-400 hover:underline text-sm"
                 >
                   Testni boshlash →
                 </button>

@@ -30,7 +30,7 @@ export default function HeroSection() {
           </h1>
 
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-            Practice CEFR and IELTS exams with AI-powered speaking, writing, reading, and listening evaluations. Get instant feedback and track your progress.
+            Practice CEFR exams with AI-powered speaking, writing, reading, and listening evaluations. Get instant feedback and track your progress.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -52,7 +52,7 @@ export default function HeroSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20">
             {[
               { icon: Brain, title: 'AI Analysis', desc: 'Smart evaluation of your speaking and writing skills' },
-              { icon: Shield, title: 'Mock Exams', desc: 'Real CEFR and IELTS simulation tests' },
+              { icon: Shield, title: 'Mock Exams', desc: 'Real CEFR simulation tests' },
               { icon: Sparkles, title: 'Progress Tracking', desc: 'Detailed analytics and personalized roadmap' },
             ].map((item, i) => (
               <motion.div

@@ -23,15 +23,26 @@ export class AiQuestionsService {
     if (part) where.part = part;
     if (cefrLevel) where.cefrLevel = cefrLevel;
 
-    const questions = await this.prisma.aiSpeakingQuestion.findMany({ where });
+    // Count total questions
+    const count = await this.prisma.aiSpeakingQuestion.count({ where });
     
-    if (questions.length === 0) {
+    if (count === 0) {
       throw new NotFoundException('Faol savollar topilmadi');
     }
 
-    // Random question tanlash
-    const randomIndex = Math.floor(Math.random() * questions.length);
-    return questions[randomIndex];
+    // Random index using Prisma
+    const skip = Math.floor(Math.random() * count);
+    const question = await this.prisma.aiSpeakingQuestion.findFirst({
+      where,
+      skip,
+      take: 1,
+    });
+
+    if (!question) {
+      throw new NotFoundException('Savol topilmadi');
+    }
+
+    return question;
   }
 
   async getSpeakingQuestionById(id: string) {

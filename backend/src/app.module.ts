@@ -19,11 +19,11 @@ import { ReportsModule } from './reports/reports.module';
 import { MocksModule } from './mocks/mocks.module';
 import { MockPartsModule } from './mock-parts/mock-parts.module';
 import { MockPaymentsModule } from './mock-payments/mock-payments.module';
-import { IeltsModule } from './ielts/ielts.module';
 import { CefrModule } from './cefr/cefr.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
 import { HealthModule } from './health/health.module';
 import { AiQuestionsModule } from './ai-questions/ai-questions.module';
+import { AiMockSetsModule } from './ai-mock-sets/ai-mock-sets.module';
 
 @Module({
   imports: [
@@ -46,11 +46,11 @@ import { AiQuestionsModule } from './ai-questions/ai-questions.module';
     MocksModule,
     MockPartsModule,
     MockPaymentsModule,
-    IeltsModule,
     CefrModule,
     QuestionBankModule,
     HealthModule,
     AiQuestionsModule,
+    AiMockSetsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -6,7 +6,7 @@ import { Mic, PenLine, BookOpen, Headphones, BarChart3, Route } from 'lucide-rea
 const features = [
   { icon: Mic, title: 'AI Speaking', desc: 'Speak and get instant feedback on pronunciation, fluency, and grammar with AI evaluation.' },
   { icon: PenLine, title: 'AI Writing', desc: 'Write essays and receive detailed analysis on grammar, vocabulary, and coherence.' },
-  { icon: BookOpen, title: 'Mock Reading', desc: 'Practice reading comprehension with authentic CEFR and IELTS passages.' },
+  { icon: BookOpen, title: 'Mock Reading', desc: 'Practice reading comprehension with authentic CEFR passages.' },
   { icon: Headphones, title: 'Mock Listening', desc: 'Train your listening skills with audio exercises and timed tests.' },
   { icon: BarChart3, title: 'Analytics', desc: 'Track your progress with detailed charts, heatmaps, and performance insights.' },
   { icon: Route, title: 'AI Roadmap', desc: 'Get a personalized study plan based on your weak areas and goals.' },
@@ -27,7 +27,7 @@ export default function FeaturesSection() {
             Everything You Need to <span className="gradient-text">Succeed</span>
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            AI-powered tools and real mock exams to help you achieve your target CEFR or IELTS score.
+            AI-powered tools and real mock exams to help you achieve your target CEFR score.
           </p>
         </motion.div>
 

@@ -21,9 +21,6 @@ enum ExamType {
   WRITING
   SPEAKING
   MOCK_CEFR
-  MOCK_IELTS
-  IELTS_ACADEMIC
-  IELTS_GENERAL
   CEFR_B1
   CEFR_B2
   CEFR_C1
@@ -105,30 +102,30 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  exams                 Exam[]
-  results               Result[]
-  speakingRecords       SpeakingRecord[]
-  writingSubmissions    WritingSubmission[]
-  subscription          Subscription?
-  analytics             Analytics?
-  achievements          Achievement[]
-  mockReports           MockReport[]
-  xp                    Int      @default(0)
-  streak                Int      @default(0)
-  centerId              String?
-  teacherId             String?
-  phone                 String?
+  exams              Exam[]
+  results            Result[]
+  speakingRecords    SpeakingRecord[]
+  writingSubmissions WritingSubmission[]
+  subscription       Subscription?
+  analytics          Analytics?
+  achievements       Achievement[]
+  mockReports        MockReport[]
+  xp                 Int                 @default(0)
+  streak             Int                 @default(0)
+  centerId           String?
+  teacherId          String?
+  phone              String?
 
-  center                  Center?              @relation(fields: [centerId], references: [id])
-  notifications           Notification[]
-  proctorLogs             ProctorLog[]
-  aiReports               AiReport[]
-  manualExamPayments      ManualExamPayment[]  @relation("StudentManualPayments")
-  reviewedManualPayments  ManualExamPayment[]  @relation("ManualPaymentReviewer")
-  examEntitlements        ExamEntitlement[]
-  auditLogsAsActor        AuditLog[]           @relation("AuditActor")
-  auditLogsAsSubject      AuditLog[]           @relation("AuditSubject")
-  aiUsageLogs             AiUsageLog[]
+  center                 Center?             @relation(fields: [centerId], references: [id])
+  notifications          Notification[]
+  proctorLogs            ProctorLog[]
+  aiReports              AiReport[]
+  manualExamPayments     ManualExamPayment[] @relation("StudentManualPayments")
+  reviewedManualPayments ManualExamPayment[] @relation("ManualPaymentReviewer")
+  examEntitlements       ExamEntitlement[]
+  auditLogsAsActor       AuditLog[]          @relation("AuditActor")
+  auditLogsAsSubject     AuditLog[]          @relation("AuditSubject")
+  aiUsageLogs            AiUsageLog[]
 
   @@index([role, createdAt])
   @@index([centerId])
@@ -136,21 +133,21 @@ model User {
 }
 
 model Center {
-  id                   String   @id @default(uuid())
-  name                 String
-  address              String?
-  phone                String?
-  email                String?
-  avatar               String?
-  mockLimit            Int?
-  adminEmail           String?  @unique
-  adminPassword        String?
-  paymentInstructions  String?
-  isVip                Boolean  @default(false)
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                  String   @id @default(uuid())
+  name                String
+  address             String?
+  phone               String?
+  email               String?
+  avatar              String?
+  mockLimit           Int?
+  adminEmail          String?  @unique
+  adminPassword       String?
+  paymentInstructions String?
+  isVip               Boolean  @default(false)
+  createdAt           DateTime @default(now()) @map("created_at")
 
-  users  User[]
-  exams  Exam[]
+  users User[]
+  exams Exam[]
 
   @@map("centers")
 }
@@ -176,7 +173,7 @@ model ProctorLog {
   resultId   String?
   eventType  String
   detail     Json?
-  screenshot String?  // Base64 screenshot (if applicable)
+  screenshot String? // Base64 screenshot (if applicable)
   timestamp  DateTime @default(now()) @map("created_at")
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -203,9 +200,9 @@ model ManualExamPayment {
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
 
-  user       User              @relation("StudentManualPayments", fields: [userId], references: [id], onDelete: Cascade)
-  exam       Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
-  reviewer   User?             @relation("ManualPaymentReviewer", fields: [reviewerId], references: [id])
+  user        User             @relation("StudentManualPayments", fields: [userId], references: [id], onDelete: Cascade)
+  exam        Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  reviewer    User?            @relation("ManualPaymentReviewer", fields: [reviewerId], references: [id])
   entitlement ExamEntitlement?
 
   @@index([status, createdAt])
@@ -218,7 +215,7 @@ model ExamEntitlement {
   id              String    @id @default(uuid())
   userId          String
   examId          String
-  manualPaymentId String   @unique
+  manualPaymentId String    @unique
   consumedAt      DateTime?
   createdAt       DateTime  @default(now()) @map("created_at")
 
@@ -293,22 +290,22 @@ model PasswordResetToken {
 }
 
 model Exam {
-  id                  String      @id @default(uuid())
+  id                  String   @id @default(uuid())
   title               String
   type                ExamType
   duration            Int
   level               String?
   centerId            String?
   createdBy           String
-  requiresPayment     Boolean     @default(true)
+  requiresPayment     Boolean  @default(true)
   priceUzs            Int?
-  paymentInstructions String?     @db.Text
-  isPublished         Boolean     @default(false)
-  createdAt           DateTime    @default(now()) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
+  paymentInstructions String?  @db.Text
+  isPublished         Boolean  @default(false)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
-  creator            User                 @relation(fields: [createdBy], references: [id])
-  center             Center?              @relation(fields: [centerId], references: [id])
+  creator            User                @relation(fields: [createdBy], references: [id])
+  center             Center?             @relation(fields: [centerId], references: [id])
   questions          Question[]
   results            Result[]
   manualExamPayments ManualExamPayment[]
@@ -322,24 +319,24 @@ model Exam {
 }
 
 model Question {
-  id          String        @id @default(uuid())
-  examId      String
-  examPartId  String?
-  skill       String?      // READING, LISTENING, WRITING, SPEAKING, LEXICAL_COMPETENCE
-  part        String?      // e.g., "1", "1.1", "2", "3", etc.
-  subPart     String?      // e.g., "1", "2", "3" for list items within a part
-  question    String       // Question text (can be HTML for rich content)
-  type        QuestionType
-  options     Json?        // Array of options for MCQ
-  answer      String?      // Correct answer
-  passage     String?      // Reading passage or audio transcript
-  mediaUrl    String?      // URL to audio/image file
-  order       Int          @default(0)
-  points      Int          @default(1)
-  createdAt   DateTime     @default(now())
+  id         String       @id @default(uuid())
+  examId     String
+  examPartId String?
+  skill      String? // READING, LISTENING, WRITING, SPEAKING, LEXICAL_COMPETENCE
+  part       String? // e.g., "1", "1.1", "2", "3", etc.
+  subPart    String? // e.g., "1", "2", "3" for list items within a part
+  question   String // Question text (can be HTML for rich content)
+  type       QuestionType
+  options    Json? // Array of options for MCQ
+  answer     String? // Correct answer
+  passage    String? // Reading passage or audio transcript
+  mediaUrl   String? // URL to audio/image file
+  order      Int          @default(0)
+  points     Int          @default(1)
+  createdAt  DateTime     @default(now())
 
-  exam        Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
-  examPart    ExamPart?   @relation(fields: [examPartId], references: [id])
+  exam        Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examPart    ExamPart?    @relation(fields: [examPartId], references: [id])
   userAnswers UserAnswer[]
 
   @@index([examId, order])
@@ -348,25 +345,25 @@ model Question {
 }
 
 model Result {
-  id                String       @id @default(uuid())
-  userId            String
-  examId            String
-  score             Float        @default(0)
-  ieltsBand         Float?       // IELTS band score (0-9)
-  cefrLevel         String?      // CEFR level (A1-C2)
-  skillScores       Json?        // Individual skill scores
-  answers           Json?        // Complete answers object
-  integrityScore    Float?       // Proctoring integrity score (0-100)
-  integrityReport   Json?        // Detailed proctoring report
-  aiFeedback        Json?        // AI feedback for writing/speaking
-  timeSpent         Int?         // Total time spent in seconds
-  status            ResultStatus @default(IN_PROGRESS)
-  startedAt         DateTime     @default(now()) @map("started_at")
-  completedAt       DateTime?    @map("completed_at")
-  createdAt         DateTime     @default(now()) @map("created_at")
+  id              String       @id @default(uuid())
+  userId          String
+  examId          String
+  score           Float        @default(0)
+  ieltsBand       Float? // Deprecated - keeping for backward compatibility
+  cefrLevel       String? // CEFR level (A1-C2)
+  skillScores     Json? // Individual skill scores
+  answers         Json? // Complete answers object
+  integrityScore  Float? // Proctoring integrity score (0-100)
+  integrityReport Json? // Detailed proctoring report
+  aiFeedback      Json? // AI feedback for writing/speaking
+  timeSpent       Int? // Total time spent in seconds
+  status          ResultStatus @default(IN_PROGRESS)
+  startedAt       DateTime     @default(now()) @map("started_at")
+  completedAt     DateTime?    @map("completed_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
 
-  user        User        @relation(fields: [userId], references: [id])
-  exam        Exam        @relation(fields: [examId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+  exam        Exam         @relation(fields: [examId], references: [id])
   userAnswers UserAnswer[]
   proctorLogs ProctorLog[]
 
@@ -378,25 +375,25 @@ model Result {
 }
 
 model SpeakingRecord {
-  id                     String   @id @default(uuid())
-  userId                 String
-  questionId             String?
-  audioUrl               String?
-  audioStorageKey        String?
-  transcript             String?
-  sttProvider            String?
-  pauseMetrics           Json?
-  segmentMetadata        Json?
-  fluencyScore           Float?
-  grammarScore           Float?
-  pronunciationScore     Float?
-  overallScore           Float?
-  estimatedSpeakingCefr  String?
-  pronunciationAnalysis  Json?
-  fluencyAnalysis        Json?
-  feedback               String?  @db.Text
-  duration               Int?     // Duration in seconds
-  createdAt              DateTime @default(now()) @map("created_at")
+  id                    String   @id @default(uuid())
+  userId                String
+  questionId            String?
+  audioUrl              String?
+  audioStorageKey       String?
+  transcript            String?
+  sttProvider           String?
+  pauseMetrics          Json?
+  segmentMetadata       Json?
+  fluencyScore          Float?
+  grammarScore          Float?
+  pronunciationScore    Float?
+  overallScore          Float?
+  estimatedSpeakingCefr String?
+  pronunciationAnalysis Json?
+  fluencyAnalysis       Json?
+  feedback              String?  @db.Text
+  duration              Int? // Duration in seconds
+  createdAt             DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -406,17 +403,17 @@ model SpeakingRecord {
 }
 
 model ExamPart {
-  id          String   @id @default(uuid())
-  examId      String
-  skill       String   // LISTENING, READING, WRITING, SPEAKING, LEXICAL_COMPETENCE
-  partNumber  String   // "1", "1.1", "2", etc.
-  title       String
-  duration    Int      // Duration in minutes for this part
-  order       Int
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  examId     String
+  skill      String // LISTENING, READING, WRITING, SPEAKING, LEXICAL_COMPETENCE
+  partNumber String // "1", "1.1", "2", etc.
+  title      String
+  duration   Int // Duration in minutes for this part
+  order      Int
+  createdAt  DateTime @default(now())
 
-  exam       Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  questions  Question[]
+  exam      Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questions Question[]
 
   @@unique([examId, skill, partNumber])
   @@index([examId, skill])
@@ -424,14 +421,14 @@ model ExamPart {
 }
 
 model UserAnswer {
-  id          String   @id @default(uuid())
-  resultId    String
-  questionId  String
-  answer      String?  // User's answer
-  isCorrect   Boolean?
-  points      Float    @default(0)
-  timeSpent   Int?     // Time spent in seconds
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  resultId   String
+  questionId String
+  answer     String? // User's answer
+  isCorrect  Boolean?
+  points     Float    @default(0)
+  timeSpent  Int? // Time spent in seconds
+  createdAt  DateTime @default(now())
 
   result   Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
   question Question @relation(fields: [questionId], references: [id])
@@ -444,32 +441,32 @@ model UserAnswer {
 }
 
 model MediaFile {
-  id          String   @id @default(uuid())
-  fileName    String
-  fileType    String   // "AUDIO", "IMAGE", "PDF"
-  fileUrl     String
-  fileSize    Int
-  uploadedBy  String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  fileName   String
+  fileType   String // "AUDIO", "IMAGE", "PDF"
+  fileUrl    String
+  fileSize   Int
+  uploadedBy String
+  createdAt  DateTime @default(now())
 
   @@index([fileType])
   @@map("media_files")
 }
 
 model WritingSubmission {
-  id               String   @id @default(uuid())
-  userId           String
-  essay            String   @db.Text
-  wordCount        Int?
-  aiFeedback       String?  @db.Text
-  grammarScore     Float?
-  vocabScore       Float?
-  coherenceScore   Float?
-  estimatedLevel   String?
-  grammarAnalysis  Json?
+  id                 String   @id @default(uuid())
+  userId             String
+  essay              String   @db.Text
+  wordCount          Int?
+  aiFeedback         String?  @db.Text
+  grammarScore       Float?
+  vocabScore         Float?
+  coherenceScore     Float?
+  estimatedLevel     String?
+  grammarAnalysis    Json?
   vocabularyAnalysis Json?
-  coherenceAnalysis Json?
-  createdAt        DateTime @default(now()) @map("created_at")
+  coherenceAnalysis  Json?
+  createdAt          DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -523,16 +520,16 @@ model Achievement {
 }
 
 model MockReport {
-  id                   String   @id @default(uuid())
-  userId               String
-  testId               String?
-  testType             String
-  readingScore         Float
-  listeningScore       Float
-  writingText          String   @db.Text
-  speakingTranscript   String   @db.Text
-  aiResponse           Json
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                 String   @id @default(uuid())
+  userId             String
+  testId             String?
+  testType           String
+  readingScore       Float
+  listeningScore     Float
+  writingText        String   @db.Text
+  speakingTranscript String   @db.Text
+  aiResponse         Json
+  createdAt          DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -542,38 +539,38 @@ model MockReport {
 }
 
 model SiteSettings {
-  id                      String   @id @default(uuid())
-  siteName                String   @default("MockCEFR")
-  siteDescription         String   @default("CEFR va IELTS mock test platformasi")
-  contactEmail            String   @default("info@mockcefr.uz")
-  contactPhone            String   @default("+998 90 123 45 67")
-  pricing                 Json     @default("{\"cefrMockPrice\": 50000, \"ieltsMockPrice\": 70000}")
-  examSettings            Json     @default("{\"defaultTimeLimit\": 120, \"maxAttempts\": 3, \"autoSubmitOnTimeout\": true}")
-  paymentInstructions     String?
-  maintenanceMode         Boolean  @default(false)
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  siteName            String   @default("MockCEFR")
+  siteDescription     String   @default("CEFR mock test platformasi")
+  contactEmail        String   @default("info@mockcefr.uz")
+  contactPhone        String   @default("+998 90 123 45 67")
+  pricing             Json     @default("{\"cefrMockPrice\": 50000}")
+  examSettings        Json     @default("{\"defaultTimeLimit\": 120, \"maxAttempts\": 3, \"autoSubmitOnTimeout\": true}")
+  paymentInstructions String?
+  maintenanceMode     Boolean  @default(false)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
 }
 
 model MockPart {
-  id              String          @id @default(uuid())
-  title           String
-  type            String
-  skill           String
-  partNumber      Int
-  questions       Json
-  audioUrl        String?
-  audioPlaysOnce  Boolean         @default(true)
-  passageText     String?         @db.Text
-  passageFile     String?
-  price           Int             @default(0)
-  status          MockPartStatus  @default(DRAFT)
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
+  id             String         @id @default(uuid())
+  title          String
+  type           String
+  skill          String
+  partNumber     Int
+  questions      Json
+  audioUrl       String?
+  audioPlaysOnce Boolean        @default(true)
+  passageText    String?        @db.Text
+  passageFile    String?
+  price          Int            @default(0)
+  status         MockPartStatus @default(DRAFT)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  attempts        MockPartAttempt[]
+  attempts MockPartAttempt[]
 
   @@index([type, skill, partNumber])
   @@index([status])
@@ -581,7 +578,7 @@ model MockPart {
 }
 
 model MockPartAttempt {
-  id             String                 @id @default(uuid())
+  id             String                @id @default(uuid())
   studentId      String
   mockPartId     String
   answers        Json
@@ -592,7 +589,7 @@ model MockPartAttempt {
   completedAt    DateTime?             @map("completed_at")
   createdAt      DateTime              @default(now()) @map("created_at")
 
-  mockPart       MockPart @relation(fields: [mockPartId], references: [id], onDelete: Cascade)
+  mockPart MockPart @relation(fields: [mockPartId], references: [id], onDelete: Cascade)
 
   @@index([studentId, mockPartId])
   @@index([status])
@@ -600,174 +597,77 @@ model MockPartAttempt {
 }
 
 model PaymentCard {
-  id              String   @id @default(uuid())
-  cardNumber      String
-  cardHolderName  String
-  bankName        String
-  cardType        String
-  isActive        Boolean  @default(false)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  cardNumber     String
+  cardHolderName String
+  bankName       String
+  cardType       String
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("payment_cards")
 }
 
 model MockPayment {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   studentId       String
   mockPartId      String
   amount          Int
   checkImageUrl   String
-  status          String   @default("pending")
+  status          String    @default("pending")
   aiVerdict       Json?
   reviewedAt      DateTime?
   reviewerId      String?
   rejectionReason String?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([studentId, mockPartId])
   @@index([status])
   @@map("mock_payments")
 }
 
-model IeltsMock {
-  id          String   @id @default(cuid())
-  title       String
-  type        String   // 'Academic' | 'General'
-  level       String   // 'B1' | 'B2' | 'C1' | 'C2'
-  description String?
-  duration    Int      // total duration in minutes (175 = 2h 55m)
-  price       Float    @default(0)
-  isPaid      Boolean  @default(false)
-  status      String   @default("draft") // 'draft' | 'published'
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  listening   IeltsListening?
-  reading     IeltsReading?
-  writing     IeltsWriting?
-  speaking    IeltsSpeaking?
-  attempts    IeltsAttempt[]
-
-  @@index([type, level, status])
-  @@map("ielts_mocks")
-}
-
-model IeltsListening {
-  id        String     @id @default(cuid())
-  mockId    String     @unique
-  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int        @default(30)
-  sections  Json       // array of sections with audioUrl + questions
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  @@map("ielts_listening")
-}
-
-model IeltsReading {
-  id        String     @id @default(cuid())
-  mockId    String     @unique
-  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int        @default(60) // minutes
-  passages  Json       // [{title, text, questions: [...]}]
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  @@map("ielts_reading")
-}
-
-model IeltsWriting {
-  id        String     @id @default(cuid())
-  mockId    String     @unique
-  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int        @default(60) // minutes
-  task1     Json       // {prompt, imageUrl?, minWords: 150}
-  task2     Json       // {prompt, minWords: 250}
-  aiWeights Json       @default("{\"taskAchievement\":25,\"coherence\":25,\"lexical\":25,\"grammar\":25}")
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  @@map("ielts_writing")
-}
-
-model IeltsSpeaking {
-  id        String     @id @default(cuid())
-  mockId    String     @unique
-  mock      IeltsMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int        @default(15) // minutes
-  part1     Json       // {questions: [...]}
-  part2     Json       // {topic, prepTime: 60, speakTime: 120}
-  part3     Json       // {questions: [...]}
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  @@map("ielts_speaking")
-}
-
-model IeltsAttempt {
-  id               String     @id @default(cuid())
-  mockId           String
-  mock             IeltsMock  @relation(fields: [mockId], references: [id])
-  userId           String
-  status           String     @default("in_progress") // in_progress | completed
-  listeningAnswers Json?
-  readingAnswers   Json?
-  writingAnswers   Json?
-  speakingAnswers  Json?
-  listeningScore   Float?
-  readingScore     Float?
-  writingScore     Float?
-  speakingScore    Float?
-  totalBand        String?     // "5.0", "5.5", "6.0"...
-  answers          Json?
-  feedback         Json?
-  startedAt        DateTime   @default(now()) @map("started_at")
-  completedAt      DateTime?  @map("completed_at")
-  createdAt        DateTime   @default(now()) @map("created_at")
-
-  @@index([mockId, userId])
-  @@index([userId, status])
-  @@map("ielts_attempts")
-}
-
 model CefrMock {
   id          String   @id @default(cuid())
   title       String
-  level       String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  level       String // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
   description String?
-  duration    Int      // total duration in minutes
+  duration    Int // total duration in minutes
   price       Float    @default(0)
   isPaid      Boolean  @default(false)
   status      String   @default("draft") // 'draft' | 'published'
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  listening   CefrListening?
-  reading     CefrReading?
-  writing     CefrWriting?
-  speaking    CefrSpeaking?
-  attempts    CefrAttempt[]
+  listening CefrListening?
+  reading   CefrReading?
+  writing   CefrWriting?
+  speaking  CefrSpeaking?
+  attempts  CefrAttempt[]
 
   @@index([level, status])
   @@map("cefr_mocks")
 }
 
 model CefrListening {
-  id        String    @id @default(cuid())
-  mockId    String    @unique @map("mock_id")
-  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int       @default(40) // minutes
-  sections  Json      // [{part: 1, questions: [...]}]
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  mockId    String   @unique @map("mock_id")
+  mock      CefrMock @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int      @default(40) // minutes
+  sections  Json // [{part: 1, questions: [...]}]
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("cefr_listening")
 }
 
 model CefrReading {
-  id        String    @id @default(cuid())
-  mockId    String    @unique @map("mock_id")
-  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int       @default(60) // minutes
-  passages  Json      // [{title, text, questions: [...]}]
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  mockId    String   @unique @map("mock_id")
+  mock      CefrMock @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int      @default(60) // minutes
+  passages  Json // [{title, text, questions: [...]}]
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("cefr_reading")
 }
@@ -777,9 +677,9 @@ model CefrWriting {
   mockId    String   @unique @map("mock_id")
   mock      CefrMock @relation(fields: [mockId], references: [id], onDelete: Cascade)
   duration  Int      @default(80) // minutes
-  task11    Json     // {prompt, minWords: 150}
-  task12    Json     // {prompt, minWords: 150}
-  task2     Json     // {prompt, minWords: 250}
+  task11    Json // {prompt, minWords: 150}
+  task12    Json // {prompt, minWords: 150}
+  task2     Json // {prompt, minWords: 250}
   aiWeights Json     @default("{\"taskResponse\":25,\"coherence\":25,\"lexical\":25,\"grammar\":25}")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -787,14 +687,14 @@ model CefrWriting {
 }
 
 model CefrSpeaking {
-  id        String    @id @default(cuid())
-  mockId    String    @unique @map("mock_id")
-  mock      CefrMock  @relation(fields: [mockId], references: [id], onDelete: Cascade)
-  duration  Int       @default(15) // minutes
-  task1     Json      // {questions: [...]}
-  task2     Json      // {topic, prepTime: 60, speakTime: 120}
-  task3     Json      // {questions: [...]}
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  mockId    String   @unique @map("mock_id")
+  mock      CefrMock @relation(fields: [mockId], references: [id], onDelete: Cascade)
+  duration  Int      @default(15) // minutes
+  task1     Json // {questions: [...]}
+  task2     Json // {topic, prepTime: 60, speakTime: 120}
+  task3     Json // {questions: [...]}
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("cefr_speaking")
 }
@@ -827,20 +727,20 @@ model CefrAttempt {
 }
 
 model QuestionBank {
-  id          String   @id @default(uuid())
-  type        String   // 'speaking' | 'writing' | 'reading' | 'listening'
-  examType    String   // 'CEFR' | 'IELTS'
-  level       String?  // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' for CEFR, 'B1' | 'B2' | 'C1' | 'C2' for IELTS
-  title       String
-  content     Json     // Question/prompt data structure
-  mediaUrl    String?  // URL for audio/image files
-  mediaKey    String?  // Storage key for media files
-  difficulty  String?  // 'easy' | 'medium' | 'hard'
-  tags        String[] @default([])
-  isActive    Boolean  @default(true)
-  createdBy   String
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  type       String // 'speaking' | 'writing' | 'reading' | 'listening'
+  examType   String // 'CEFR'
+  level      String? // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' for CEFR
+  title      String
+  content    Json // Question/prompt data structure
+  mediaUrl   String? // URL for audio/image files
+  mediaKey   String? // Storage key for media files
+  difficulty String? // 'easy' | 'medium' | 'hard'
+  tags       String[] @default([])
+  isActive   Boolean  @default(true)
+  createdBy  String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([type, examType, level])
   @@index([isActive])
@@ -848,45 +748,70 @@ model QuestionBank {
 }
 
 model AiSpeakingQuestion {
-  id               String   @id @default(uuid())
-  part             Int      // 1, 2, or 3
-  cefrLevel        String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
-  questionText     String   @db.Text
-  topicCard        String?  @db.Text // For Part 2
-  timeLimitSeconds Int      @default(60)
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id               String     @id @default(uuid())
+  part             Int // 1, 2, or 3
+  cefrLevel        String // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  questionText     String     @db.Text
+  topicCard        String?    @db.Text // For Part 2
+  imageUrl         String?
+  timeLimitSeconds Int        @default(60)
+  isActive         Boolean    @default(true)
+  mockSetId        String?    @map("mock_set_id")
+  mockSet          AiMockSet? @relation(fields: [mockSetId], references: [id], onDelete: SetNull)
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
 
   @@index([part, cefrLevel])
   @@index([isActive])
+  @@index([mockSetId])
   @@map("ai_speaking_questions")
 }
 
 model AiWritingQuestion {
-  id            String   @id @default(uuid())
-  task          Int      // 1 or 2
-  cefrLevel     String   // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
-  promptText    String   @db.Text
-  minWords      Int      @default(150)
-  maxWords      Int      @default(300)
-  sampleAnswer  String?  @db.Text
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           String     @id @default(uuid())
+  task         Int // 1 or 2
+  cefrLevel    String // 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  promptText   String     @db.Text
+  minWords     Int        @default(150)
+  maxWords     Int        @default(300)
+  sampleAnswer String?    @db.Text
+  isActive     Boolean    @default(true)
+  mockSetId    String?    @map("mock_set_id")
+  mockSet      AiMockSet? @relation(fields: [mockSetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
   @@index([task, cefrLevel])
   @@index([isActive])
+  @@index([mockSetId])
   @@map("ai_writing_questions")
 }
 
+model AiMockSet {
+  id                String               @id @default(uuid())
+  title             String
+  type              String // 'SPEAKING_FULL' | 'WRITING_FULL' | 'COMBINED'
+  cefrLevel         String
+  description       String?              @db.Text
+  isActive          Boolean              @default(true)
+  price             Int                  @default(0)
+  duration          Int? // minutes
+  speakingQuestions AiSpeakingQuestion[]
+  writingQuestions  AiWritingQuestion[]
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  @@index([type, cefrLevel, isActive])
+  @@map("ai_mock_sets")
+}
+
 model PaymentRequest {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   userId          String
   fileUrl         String
-  status          String   @default("pending") // 'pending' | 'approved' | 'rejected'
-  rejectionReason String?  @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
+  status          String    @default("pending") // 'pending' | 'approved' | 'rejected'
+  rejectionReason String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
   reviewedAt      DateTime?
 
   @@index([status, createdAt])

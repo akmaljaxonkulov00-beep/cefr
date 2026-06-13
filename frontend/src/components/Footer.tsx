@@ -15,7 +15,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 max-w-md">
-              AI-powered mock exam platform for CEFR and IELTS preparation. Practice Speaking, Writing, Reading, and Listening with intelligent feedback.
+              AI-powered mock exam platform for CEFR preparation. Practice Speaking, Writing, Reading, and Listening with intelligent feedback.
             </p>
           </div>
 
