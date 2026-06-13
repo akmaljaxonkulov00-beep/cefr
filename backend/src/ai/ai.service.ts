@@ -838,8 +838,8 @@ Pause Metrics: ${JSON.stringify(pauseMetrics, null, 2)}`;
     const pauseMetrics = pauseMetricsFromSegments(stt.segments, stt.text || '');
     const transcriptWordCount = (stt.text || '').trim().split(/\s+/).filter(Boolean).length;
 
-    // ⚠️ CRITICAL CHECK: Bo'sh yoki juda qisqa javob = 0 BALL
-    if (transcriptWordCount < 10) {
+    // ⚠️ CRITICAL CHECK: Faqat mutlaqo bo'sh javob = 0 BALL
+    if (transcriptWordCount < 3) {
       return {
         fluency: 0,
         vocabulary: 0,
@@ -848,12 +848,11 @@ Pause Metrics: ${JSON.stringify(pauseMetrics, null, 2)}`;
         overallScore: 0,
         detectedLevel: 'A1',
         transcription: stt.text || '(bo\'sh)',
-        grammarErrors: ['⚠️ Javob juda qisqa yoki bo\'sh. Kamida 30 so\'z gapiring.'],
-        feedback: '⚠️ XATO: Audio bo\'sh yoki juda qisqa (kamida 30 so\'z kerak). Mikrofon ruxsatini tekshiring va qayta urinib ko\'ring.',
+        grammarErrors: ['⚠️ Javob bo\'sh. Audio yozilmadi.'],
+        feedback: '⚠️ XATO: Audio bo\'sh. Mikrofon ruxsatini tekshiring va qayta urinib ko\'ring.',
         suggestions: [
           'Mikrofon ruxsatini bering va audio yozilishini tekshiring',
-          'Kamida 30-60 soniya gapiring (juda qisqa javob past ball)',
-          'Savolga to\'liq va batafsil javob bering',
+          'Savolga javob bering',
           'Audio sifatini tekshiring - ovoz aniq eshitilishi kerak'
         ],
       };
@@ -862,70 +861,60 @@ Pause Metrics: ${JSON.stringify(pauseMetrics, null, 2)}`;
     // PROFESSIONAL CEFR SPEAKING EXAMINER PROMPT
     const system = `Sen professional CEFR Speaking Examiner san. Sen ANIQ, TO'G'RI va JUDA QATTIQ baholash qilasan.
 
-⚠️ MUHIM QOIDA: Hech narsa demaganlar yoki juda kam gapirganlar uchun 0-2 ball ber!
+⚠️ MUHIM QOIDA: Faqat bo'sh javoblar uchun 0 ball ber!
 
 Bu Speaking Part ${part}:
-- Part 1: Shaxsiy savollar (qisqa javoblar, 30-60 so'z)
-- Part 2: Monolog (uzoq javob, 100-150 so'z) 
-- Part 3: Muhokama (tahliliy javoblar, 60-100 so'z)
+- Part 1: Shaxsiy savollar (qisqa javoblar)
+- Part 2: Monolog (uzoq javob) 
+- Part 3: Muhokama (tahliliy javoblar)
 
 Transkripsiya: ${transcriptWordCount} so'z
 
-⚠️ SO'Z SONI BO'YICHA QATTIQ BAHOLASH:
-- 0-10 so'z = 0 ball (hech narsa demagan, AVTOMATIK 0!)
-- 10-20 so'z = 0-1 ball (juda kam, deyarli javob yo'q)
-- 20-30 so'z = 1-2 ball (kam, to'liq emas)
-- 30-50 so'z = 2-4 ball (yetarli emas)
-- 50-80 so'z = 4-6 ball (o'rtacha)
-- 80-120 so'z = 6-8 ball (yaxshi)
-- 120+ so'z = 8-10 ball (a'lo)
-
-${transcriptWordCount < 30 ? '⚠️⚠️⚠️ JUDA QISQA! Maksimum 1-2 ball ber! ⚠️⚠️⚠️' : ''}
+⚠️ SO'Z SONI BO'YICHA BAHOLASH (HECH QANDAY MINIMAL TALAB YO'Q):
+- Qisqa javoblar ham baholanadi
+- Faqat sifat va mazmunni baholay
+- So'z soni minimal shartiga bog'liq emas
 
 4 ta kriteriya bo'yicha baho ber (0-10):
 
 1. **Fluency & Coherence**
-   - Juda qisqa javob (< 30 so'z) = 0-2 ball
    - Ko'p pauza (>1.5s) = KATTA minus
    - Hesitation (um, uh) = minus
-   - 0-2: Hech narsa yoki juda kam
+   - 0-2: Bo'sh yoki juda ko'p pauza
    - 3-4: Ko'p pauza
    - 5-6: O'rtacha
    - 7-8: Yaxshi
    - 9-10: A'lo
 
 2. **Vocabulary**
-   - Juda qisqa javob = 0-2 ball
-   - Bir xl so'z qayta-qayta = PAST
-   - 0-2: Hech narsa yoki juda cheklangan
+   - Bir xil so'z qayta-qayta = PAST
+   - 0-2: Juda cheklangan
    - 3-4: Cheklangan
    - 5-6: O'rtacha
    - 7-8: Yaxshi
    - 9-10: Keng
 
 3. **Grammar**
-   - Juda qisqa javob = 0-2 ball
    - Har jumlada xato = KATTA minus
-   - 0-2: Hech narsa yoki juda ko'p xato
+   - 0-2: Juda ko'p xato
    - 3-4: Ko'p xato
    - 5-6: Ba'zi xato
    - 7-8: Oz xato
    - 9-10: Deyarli xatosiz
 
 4. **Pronunciation**
-   - Juda qisqa javob = 0-2 ball
-   - 0-2: Hech narsa
+   - 0-2: Qiyin tushunish
    - 3-4: Qiyin tushunarli
    - 5-6: Tushunarli
    - 7-8: Aniq
    - 9-10: Native darajada
 
-JSON format (QATTIQ BAHOLASH!):
+JSON format (PROFESSIONAL BAHOLASH):
 {
-  "fluency": number (0-10, juda qisqa = 0-2),
-  "vocabulary": number (0-10, juda qisqa = 0-2),
-  "grammar": number (0-10, juda qisqa = 0-2),
-  "pronunciation": number (0-10, juda qisqa = 0-2),
+  "fluency": number (0-10),
+  "vocabulary": number (0-10),
+  "grammar": number (0-10),
+  "pronunciation": number (0-10),
   "overallScore": number (o'rtacha),
   "detectedLevel": string (A1|A2|B1|B2|C1|C2),
   "transcription": string,
@@ -942,7 +931,7 @@ CEFR DARAJA:
 - 5.0-5.9: A2
 - 0-4.9: A1
 
-QATTIQ BAHOLASH! Bo'sh yoki qisqa javob = PAST BALL!`;
+PROFESSIONAL BAHOLASH! Faqat sifat va mazmunni baholang!`;
 
     const user = `Part ${part} SAVOL:
 ${questionText}
@@ -950,9 +939,7 @@ ${questionText}
 STUDENT JAVOBI (${transcriptWordCount} so'z):
 ${stt.text || '(bo\'sh)'}
 
-⚠️ DIQQAT: ${transcriptWordCount < 30 ? 'JUDA QISQA! Maksimum 1-2 ball ber!' : transcriptWordCount < 50 ? 'Qisqa! Maksimum 4 ball ber!' : 'Yetarli uzunlik'}
-
-QATTIQ BAHOLASH! Bo'sh = 0, qisqa = 1-2, past = 3-4, o'rtacha = 5-6, yaxshi = 7-8, a'lo = 9-10`;
+PROFESSIONAL BAHOLASH! Faqat sifat va mazmunni baholang!`;
 
     const { parsed, usage, latencyMs, model } = await this.groq.chatJson<any>({
       system,

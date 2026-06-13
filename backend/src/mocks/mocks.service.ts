@@ -16,7 +16,10 @@ export class MocksService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (type) where.type = type.toUpperCase();
+    // Only MOCK_CEFR type is supported
+    if (type && type.toUpperCase() === 'CEFR') {
+      where.type = 'MOCK_CEFR';
+    }
     if (status === 'ACTIVE') where.isPublished = true;
     if (status === 'DRAFT') where.isPublished = false;
     if (search) {
@@ -89,9 +92,9 @@ export class MocksService {
     const mock = await this.prisma.exam.create({
       data: {
         title,
-        type: type.toUpperCase() === 'IELTS' ? 'MOCK_IELTS' : 'MOCK_CEFR',
-        duration: type.toUpperCase() === 'IELTS' ? 170 : 150,
-        level: type.toUpperCase() === 'IELTS' ? '6.5' : 'B2',
+        type: 'MOCK_CEFR', // Only CEFR supported now
+        duration: 150,
+        level: 'B2',
         requiresPayment: true,
         priceUzs: Number(priceUzs),
         paymentInstructions: discountPrice ? `Chegirma narxi: ${discountPrice} UZS` : undefined,

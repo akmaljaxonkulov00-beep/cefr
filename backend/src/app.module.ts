@@ -23,7 +23,6 @@ import { CefrModule } from './cefr/cefr.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
 import { HealthModule } from './health/health.module';
 import { AiQuestionsModule } from './ai-questions/ai-questions.module';
-import { AiMockSetsModule } from './ai-mock-sets/ai-mock-sets.module';
 
 @Module({
   imports: [
@@ -50,7 +49,6 @@ import { AiMockSetsModule } from './ai-mock-sets/ai-mock-sets.module';
     QuestionBankModule,
     HealthModule,
     AiQuestionsModule,
-    AiMockSetsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
